@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, JetBrains_Mono, Nunito_Sans } from "next/font/google";
+import { Geist, JetBrains_Mono, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
+import { ThemeProvider } from "@/components/layout/theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const nunitoSans = Nunito_Sans({ variable: "--font-sans", subsets: ["latin"] });
 
@@ -28,9 +30,26 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("h-full antialiased font-sans", geistSans.variable, jetbrainsMono.variable, nunitoSans.variable)}
+      suppressHydrationWarning
+      className={cn(
+        "h-full antialiased font-sans",
+        geistSans.variable,
+        jetbrainsMono.variable,
+        nunitoSans.variable
+      )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <TooltipProvider>
+            {children}
+          </TooltipProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

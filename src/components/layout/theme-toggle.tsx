@@ -14,31 +14,28 @@ import {
 import { Skeleton } from '../ui/skeleton'
 
 const CYCLE: Record<string, string> = {
-  system: 'light',
   light: 'dark',
-  dark: 'system',
+  dark: 'light',
 }
 
 const LABELS: Record<string, string> = {
-  system: 'System theme',
   light: 'Light mode',
   dark: 'Dark mode',
 }
 
 const ICONS: Record<string, React.ReactNode> = {
-  system: <Monitor className="size-4" />,
   light: <Sun className="size-4" />,
   dark: <Moon className="size-4" />,
 }
 
 export function ThemeToggle() {
-  const { theme = 'system', setTheme } = useTheme()
+  const { theme = 'dark', setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => setMounted(true), [])
 
   function cycleTheme() {
-    setTheme(CYCLE[theme] ?? 'system')
+    setTheme(CYCLE[theme])
   }
 
   return (
@@ -48,16 +45,14 @@ export function ThemeToggle() {
           variant="ghost"
           size="icon"
           className="text-muted-foreground hover:text-foreground"
-          onClick={cycleTheme}
           aria-label="Toggle theme"
+          onClick={cycleTheme}
         >
           {mounted ? ICONS[theme] : <Skeleton className="size-4" />}
           <span className="sr-only">{LABELS[theme]}</span>
         </Button>
       </TooltipTrigger>
-      {mounted && (
-        <TooltipContent>{LABELS[theme] ?? 'Toggle theme'}</TooltipContent>
-      )}
+      {mounted && <TooltipContent>{LABELS[theme]}</TooltipContent>}
     </Tooltip>
   )
 }

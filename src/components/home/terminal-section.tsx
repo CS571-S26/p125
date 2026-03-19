@@ -1,4 +1,3 @@
-import { GameOverlay } from '@/components/games/game-overlay'
 import { GameProvider } from '@/contexts/game-context'
 
 import { TerminalWidget } from '../terminal/terminal-widget'
@@ -12,7 +11,6 @@ export function TerminalSection() {
         </p>
         <TerminalWidget />
       </section>
-      <GameOverlay />
     </GameProvider>
   )
 }

@@ -297,6 +297,13 @@ export function useTerminal() {
     [advanceContactFlow, runCommand],
   )
 
+  const appendLine = useCallback(
+    (type: TerminalLine['type'], content: TerminalLine['content']) => {
+      setState(prev => ({ ...prev, lines: [...prev.lines, makeLine(type, content)] }))
+    },
+    [],
+  )
+
   return {
     lines: state.lines,
     input: state.input,
@@ -304,5 +311,6 @@ export function useTerminal() {
     handleInputChange,
     handleKeyDown,
     outputRef,
+    appendLine,
   }
 }

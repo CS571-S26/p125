@@ -9,8 +9,9 @@ Tickets are ordered by priority and dependency. Complete each ticket before star
 | Status | Range | Phase |
 |---|---|---|
 | ✅ Complete | PORT-001–019 | Setup, Layout, Shared, Homepage, Terminal core |
-| 🔄 Next | PORT-044–046 | Phase 4b — Snake game |
-| ⬜ Queued | PORT-020–025 | Phase 5 — API routes |
+| ✅ Complete | PORT-044–046 | Phase 4b — Snake game |
+| ✅ Complete | PORT-050–055 | Phase 4c — Game system overhaul (in-terminal + pixel + audio) |
+| 🔄 Next | PORT-020–025 | Phase 5 — API routes |
 | ⬜ Queued | PORT-026–040 | Phase 6–7 — MDX + Site pages |
 | ⬜ Queued | PORT-041–043 | Phase 8 — Polish |
 | ⬜ Queued | PORT-047–049 | Phase 9 — Terminal creativity |
@@ -127,6 +128,75 @@ Build the canvas game overlay infrastructure and get snake playable before movin
 - Input disabled while overlay is open
 
 **Dependencies:** PORT-044, PORT-045
+
+---
+
+## Phase 4c: Game System Overhaul
+
+Move game canvas inside the terminal card; per-game config bundles; audio framework; pause overlay.
+
+---
+
+### PORT-050 · Refactor · Type system update
+
+**Summary:** Add `GameControls`, `GameConfig` (with `bg: string`); update `GameModule`.
+
+**Files modified:** `src/types/games.ts`
+
+**Status:** ✅ Complete
+
+---
+
+### PORT-051 · Feature · Universal audio framework
+
+**Summary:** `playSound(name, isMuted)` plays `/sounds/{name}.mp3`; ignores errors gracefully.
+
+**Files created:** `src/lib/games/audio.ts`
+
+**Status:** ✅ Complete
+
+---
+
+### PORT-052 · Refactor · In-terminal `GamePanel` + registry update
+
+**Summary:** `GamePanel` hosts canvas inside terminal card; `loadGame` returns `mod.config`.
+
+**Files created:** `src/components/games/game-panel.tsx`
+**Files modified:** `src/lib/games/registry.ts`, `src/components/terminal/terminal-widget.tsx`
+**Files deleted:** `src/components/games/game-overlay.tsx`
+
+**Status:** ✅ Complete
+
+---
+
+### PORT-053 · Feature · Context expansion
+
+**Summary:** Add `isMuted`, `isPaused`, `activeConfig`, `toggleMute`, `setIsPaused`, `setActiveConfig` to `GameContext`.
+
+**Files modified:** `src/contexts/game-context.tsx`
+
+**Status:** ✅ Complete
+
+---
+
+### PORT-054 · Refactor · Snake per-game config
+
+**Summary:** Local `PALETTE`; `GameControls` return; `isMuted` param; pause support; pixelated rendering; `playSound` calls; export `config: GameConfig`.
+
+**Files modified:** `src/lib/games/snake.ts`
+
+**Status:** ✅ Complete
+
+---
+
+### PORT-055 · Feature · Universal `PauseOverlay` + title bar game mode
+
+**Summary:** `PauseOverlay` with mute toggle + controls list; title bar shows active game label with Esc/Q hints.
+
+**Files created:** `src/components/games/pause-overlay.tsx`
+**Files modified:** `src/components/terminal/chrome/terminal-title-bar.tsx`, `src/components/home/terminal-section.tsx`
+
+**Status:** ✅ Complete
 
 ---
 
@@ -782,9 +852,15 @@ All `hiddenFromHelp: true`. Visible only via `help --all`.
 | PORT-017 | ✅ | 4 · Terminal | Async command handlers (stubs) |
 | PORT-018 | ✅ | 4 · Terminal | Terminal UI components |
 | PORT-019 | ✅ | 4 · Terminal | Wire terminal to homepage |
-| PORT-044 | 🔄 | 4b · Games | Game infrastructure (context + overlay) |
-| PORT-045 | 🔄 | 4b · Games | Snake game module |
-| PORT-046 | 🔄 | 4b · Games | Wire snake to terminal |
+| PORT-044 | ✅ | 4b · Games | Game infrastructure (context + overlay) |
+| PORT-045 | ✅ | 4b · Games | Snake game module |
+| PORT-046 | ✅ | 4b · Games | Wire snake to terminal |
+| PORT-050 | ✅ | 4c · Games | Type system update (GameControls, GameConfig) |
+| PORT-051 | ✅ | 4c · Games | Universal audio framework |
+| PORT-052 | ✅ | 4c · Games | In-terminal GamePanel + registry update |
+| PORT-053 | ✅ | 4c · Games | Context expansion (isMuted, isPaused, activeConfig) |
+| PORT-054 | ✅ | 4c · Games | Snake per-game config (palette, sounds, controls) |
+| PORT-055 | ✅ | 4c · Games | Universal PauseOverlay + title bar game mode |
 | PORT-020 | ⬜ | 5 · API | Spotify now-playing route |
 | PORT-021 | ⬜ | 5 · API | Weather route |
 | PORT-022 | ⬜ | 5 · API | Joke route |

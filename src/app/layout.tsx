@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Josefin_Sans, Nunito_Sans } from "next/font/google";
+import { JetBrains_Mono, Josefin_Sans, Nunito_Sans, Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/layout/theme-provider";
@@ -16,6 +16,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 const josefinSans = Josefin_Sans({
   variable: "--font-josefin-sans",
+  subsets: ["latin"],
+});
+
+const pressStart2P = Press_Start_2P({
+  variable: "--font-pixel",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -37,7 +43,8 @@ export default function RootLayout({
         "h-full antialiased font-sans",
         jetbrainsMono.variable,
         josefinSans.variable,
-        nunitoSans.variable
+        nunitoSans.variable,
+        pressStart2P.variable
       )}
     >
       <body className="min-h-full flex flex-col">

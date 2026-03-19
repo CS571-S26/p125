@@ -1,6 +1,13 @@
 import type { CommandDef, CommandResult } from '@/types/terminal'
 
 import {
+  handleDefine,
+  handleJoke,
+  handleNowPlaying,
+  handlePrice,
+  handleWeather,
+} from './async-commands'
+import {
   handleClear,
   handleContact,
   handleDate,
@@ -119,5 +126,45 @@ export const COMMANDS: Record<string, CommandDef> = {
     type: 'sync',
     handler: handleHello,
     hiddenFromHelp: true,
-  }
+  },
+
+  // ── Async ─────────────────────────────────────────────────────────────────
+  nowplaying: {
+    description: 'What am I listening to right now?',
+    aliases: ['music'],
+    type: 'async',
+    handler: () => handleNowPlaying(),
+    hiddenFromHelp: false,
+  },
+
+  weather: {
+    description: 'Current weather in Madison, WI',
+    aliases: ['location'],
+    type: 'async',
+    handler: () => handleWeather(),
+    hiddenFromHelp: false,
+  },
+
+  joke: {
+    description: 'Tell me a programming joke',
+    type: 'async',
+    handler: () => handleJoke(),
+    hiddenFromHelp: false,
+  },
+
+  price: {
+    description: 'Crypto price lookup',
+    usage: '<ticker>',
+    type: 'async',
+    handler: (args) => handlePrice(args),
+    hiddenFromHelp: false,
+  },
+
+  define: {
+    description: 'Look up a word definition',
+    usage: '<word>',
+    type: 'async',
+    handler: (args) => handleDefine(args),
+    hiddenFromHelp: false,
+  },
 }

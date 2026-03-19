@@ -1,16 +1,6 @@
 import type { CommandResult, TerminalState } from '@/types/terminal'
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function out(...lines: string[]): CommandResult {
-  return { lines: lines.map(content => ({ type: 'output' as const, content })) }
-}
-
-function err(content: string): CommandResult {
-  return { lines: [{ type: 'error' as const, content }] }
-}
-
-// ─── Handlers ────────────────────────────────────────────────────────────────
+import { out, err } from './helpers'
 
 export function handleClear(): CommandResult {
   return { lines: [], nextState: { lines: [] } }

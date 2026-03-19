@@ -26,6 +26,7 @@ export const COMMANDS: Record<string, CommandDef> = {
         const tag = def.type === 'async' ? ' [async]' : ''
         const usage = def.usage ? ` ${def.usage}` : ''
         const aliases = def.aliases?.length ? `  (alias: ${def.aliases.join(', ')})` : ''
+        if (def.hiddenFromHelp) return []
         return [
           {
             type: 'output' as const,
@@ -35,12 +36,14 @@ export const COMMANDS: Record<string, CommandDef> = {
       })
       return { lines }
     },
+    hiddenFromHelp: false,
   },
 
   clear: {
     description: 'Clear the terminal',
     type: 'sync',
     handler: handleClear,
+    hiddenFromHelp: false,
   },
 
   // ── Info ──────────────────────────────────────────────────────────────────
@@ -48,30 +51,35 @@ export const COMMANDS: Record<string, CommandDef> = {
     description: 'Who are you?',
     type: 'sync',
     handler: handleWhoami,
+    hiddenFromHelp: true,
   },
 
   date: {
     description: 'Print current date and time',
     type: 'sync',
     handler: handleDate,
+    hiddenFromHelp: false,
   },
 
   skills: {
     description: 'List my technical skills',
     type: 'sync',
     handler: handleSkills,
+    hiddenFromHelp: false,
   },
 
   experience: {
     description: 'View my work experience',
     type: 'sync',
     handler: handleExperience,
+    hiddenFromHelp: false,
   },
 
   projects: {
     description: 'Browse my projects',
     type: 'sync',
     handler: handleProjects,
+    hiddenFromHelp: false,
   },
 
   // ── Contact ───────────────────────────────────────────────────────────────
@@ -79,6 +87,7 @@ export const COMMANDS: Record<string, CommandDef> = {
     description: 'Send me a message',
     type: 'sync',
     handler: handleContact,
+    hiddenFromHelp: false,
   },
 
   // ── Easter eggs ───────────────────────────────────────────────────────────
@@ -86,12 +95,14 @@ export const COMMANDS: Record<string, CommandDef> = {
     description: '...',
     type: 'sync',
     handler: handleSudo,
+    hiddenFromHelp: true,
   },
 
   rm: {
     description: '...',
     type: 'sync',
     handler: (args) => handleRm(args),
+    hiddenFromHelp: true,
   },
 
   exit: {
@@ -99,5 +110,6 @@ export const COMMANDS: Record<string, CommandDef> = {
     aliases: ['quit'],
     type: 'sync',
     handler: handleExit,
+    hiddenFromHelp: true,
   },
 }

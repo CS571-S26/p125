@@ -35,4 +35,5 @@ export interface CommandDef {
   aliases?: string[]
   type: 'sync' | 'async'
   handler: (args: string[], state: TerminalState) => CommandResult | Promise<CommandResult>
+  hiddenFromHelp: boolean
 }

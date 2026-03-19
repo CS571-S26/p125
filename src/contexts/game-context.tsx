@@ -11,8 +11,10 @@ interface GameContextValue {
   isMuted: boolean
   isPaused: boolean
   activeConfig: GameConfig | null
+  restartKey: number
   launchGame: (id: GameId) => void
   exitGame: (score?: number) => void
+  restartGame: () => void
   toggleMute: () => void
   setIsPaused: (v: boolean) => void
   setActiveConfig: (c: GameConfig | null) => void
@@ -28,6 +30,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [isPaused, setIsPaused] = useState(false)
   const [activeConfig, setActiveConfig] = useState<GameConfig | null>(null)
   const [liveScore, setLiveScore] = useState<number | null>(null)
+  const [restartKey, setRestartKey] = useState(0)
 
   const launchGame = useCallback((id: GameId) => {
     setActiveGame(id)
@@ -44,6 +47,12 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setLiveScore(null)
   }, [])
 
+  const restartGame = useCallback(() => {
+    setIsPaused(false)
+    setLiveScore(null)
+    setRestartKey(k => k + 1)
+  }, [])
+
   const toggleMute = useCallback(() => setIsMuted(m => !m), [])
 
   return (
@@ -54,8 +63,10 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       isMuted,
       isPaused,
       activeConfig,
+      restartKey,
       launchGame,
       exitGame,
+      restartGame,
       toggleMute,
       setIsPaused,
       setActiveConfig,

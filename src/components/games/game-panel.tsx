@@ -19,7 +19,8 @@ export function GamePanel() {
     activeConfig,
     setLiveScore,
     toggleMute,
-    launchGame,
+    restartKey,
+    restartGame,
   } = useGame()
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const controlsRef = useRef<GameControls | null>(null)
@@ -45,7 +46,7 @@ export function GamePanel() {
       controlsRef.current?.cleanup()
       controlsRef.current = null
     }
-  }, [activeGame, exitGame, setActiveConfig])
+  }, [activeGame, restartKey, exitGame, setActiveConfig])
 
   // Sync isPaused context → game controls
   useEffect(() => {
@@ -61,23 +62,22 @@ export function GamePanel() {
         e.preventDefault()
         setIsPaused(!isPaused)
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'c') {
+      if (e.ctrlKey && e.key === 'c') {
         e.preventDefault()
         exitGame()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'r') {
+      if (e.ctrlKey && e.key === 'r') {
         e.preventDefault()
-        exitGame()
-        setTimeout(() => launchGame(activeGame), 50)
+        restartGame()
       }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'm') {
+      if (e.ctrlKey && e.key === 'm') {
         e.preventDefault()
         toggleMute()
       }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [activeGame, exitGame, isPaused, setIsPaused, toggleMute, launchGame])
+  }, [activeGame, exitGame, isPaused, setIsPaused, toggleMute, restartGame])
 
   const bgColor = activeConfig?.bg ?? '#000000'
   const hints = activeConfig?.controls ?? []
@@ -95,7 +95,7 @@ export function GamePanel() {
 
       {/* Controls strip — bottom */}
       {hints.length > 0 && (
-        <div className="shrink-0 flex items-center gap-5 px-3 py-1.5 bg-game-surface border-t border-game-line">
+        <div className="shrink-0 flex items-center gap-5 px-3 py-2 bg-game-surface border-t border-game-line">
           {hints.map((h) => (
             <span
               key={h}

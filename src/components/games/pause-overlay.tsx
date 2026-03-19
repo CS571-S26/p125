@@ -8,26 +8,12 @@ import { cn } from '@/lib/utils'
 type MenuItem = { label: string; hint?: string; action: () => void }
 
 export function PauseOverlay() {
-  const {
-    isMuted,
-    toggleMute,
-    activeConfig,
-    setIsPaused,
-    exitGame,
-    launchGame,
-  } = useGame()
+  const { isMuted, toggleMute, setIsPaused, exitGame, restartGame } = useGame()
   const [selected, setSelected] = useState(0)
-
-  const handleRestart = () => {
-    const id = activeConfig?.id
-    if (!id) return
-    exitGame()
-    setTimeout(() => launchGame(id), 50)
-  }
 
   const items: MenuItem[] = [
     { label: 'RESUME', hint: 'ESC', action: () => setIsPaused(false) },
-    { label: 'RESTART', hint: 'CTRL+R', action: handleRestart },
+    { label: 'RESTART', hint: 'CTRL+R', action: restartGame },
     {
       label: `SOUND  ${isMuted ? 'OFF' : 'ON'}`,
       hint: 'CTRL+M',

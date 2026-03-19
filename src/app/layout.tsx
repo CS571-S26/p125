@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, JetBrains_Mono, Nunito_Sans } from "next/font/google";
+import { JetBrains_Mono, Josefin_Sans, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/layout/theme-provider";
@@ -14,8 +14,8 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const josefinSans = Josefin_Sans({
+  variable: "--font-josefin-sans",
   subsets: ["latin"],
 });
 
@@ -35,8 +35,8 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(
         "h-full antialiased font-sans",
-        geistSans.variable,
         jetbrainsMono.variable,
+        josefinSans.variable,
         nunitoSans.variable
       )}
     >

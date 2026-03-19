@@ -8,7 +8,7 @@ import { LinkedIn } from '../ui/icons/linkedin'
 
 export function HeroSection() {
   return (
-    <section className="max-w-3xl mx-auto px-4 pt-20 pb-12">
+    <section className="max-w-3xl mx-auto px-4">
       <p className="text-xs text-muted-foreground tracking-widest font-(family-name:--font-jetbrains-mono) mb-3 uppercase">
         Software Engineer
       </p>

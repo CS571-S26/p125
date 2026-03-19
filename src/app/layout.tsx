@@ -55,7 +55,7 @@ export default function RootLayout({
         >
           <TooltipProvider>
             <SiteHeader />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 pt-4">{children}</main>
             <SiteFooter />
           </TooltipProvider>
         </ThemeProvider>

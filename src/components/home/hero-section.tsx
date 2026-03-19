@@ -16,9 +16,10 @@ export function HeroSection() {
         Vishrut Agrawal
       </h1>
       <p className="text-muted-foreground leading-relaxed max-w-xl">
-        CS, CE, and Economics student at the University of Wisconsin–Madison,
-        graduating May 2026. I build full-stack systems and enjoy working close
-        to the metal.
+        Hey, I'm Vishrut, a software engineer who enjoys taking early ideas and
+        building them out into complete products. I prioritize getting the
+        details right, whether that's in cloud infrastructure, tweaking how a
+        button looks, or the business logic that ties it all together.
       </p>
       <div className="flex items-center gap-2 mt-8">
         <Button variant="ghost" size="sm" asChild>

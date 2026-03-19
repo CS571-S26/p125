@@ -1,14 +1,13 @@
 import Link from 'next/link'
 
-import { Separator } from '@/components/ui/separator'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 import { GitHubDark, GitHubLight } from '../ui/icons/github'
 import { LinkedIn } from '../ui/icons/linkedin'
 
 export function SiteFooter() {
   return (
     <footer>
-      <Separator />
-      <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
         <p className="text-xs text-muted-foreground font-(family-name:--font-jetbrains-mono)">
           © 2026 Vishrut Agrawal
         </p>
@@ -32,6 +31,7 @@ export function SiteFooter() {
           >
             <LinkedIn className="h-4 w-4" />
           </Link>
+          <ThemeToggle />
         </div>
       </div>
     </footer>

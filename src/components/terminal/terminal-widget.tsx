@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useGame } from '@/contexts/game-context'
 import { useTerminal } from '@/hooks/use-terminal'
@@ -20,6 +20,7 @@ export function TerminalWidget() {
   const { activeGame, lastScore, launchGame } = useGame()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const cardRef  = useRef<HTMLDivElement | null>(null)
+  const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     COMMANDS['games'] = makeGamesCommand(launchGame)
@@ -61,6 +62,7 @@ export function TerminalWidget() {
             lines={lines}
             input={input}
             isLoading={isLoading}
+            isFocused={isFocused}
             outputRef={outputRef}
           />
       }
@@ -71,6 +73,8 @@ export function TerminalWidget() {
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         disabled={isLoading || !!activeGame}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="off"

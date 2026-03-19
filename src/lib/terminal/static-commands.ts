@@ -60,3 +60,7 @@ export function handleRm(args: string[]): CommandResult {
 export function handleExit(): CommandResult {
   return out('There is no escape.')
 }
+
+export function handleHello(): CommandResult {
+  return out('World!')
+}

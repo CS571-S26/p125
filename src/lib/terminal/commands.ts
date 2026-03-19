@@ -6,6 +6,7 @@ import {
   handleDate,
   handleExit,
   handleExperience,
+  handleHello,
   handleProjects,
   handleRm,
   handleSkills,
@@ -112,4 +113,11 @@ export const COMMANDS: Record<string, CommandDef> = {
     handler: handleExit,
     hiddenFromHelp: true,
   },
+
+  hello: {
+    description: "Saying hi never hurts",
+    type: 'sync',
+    handler: handleHello,
+    hiddenFromHelp: true,
+  }
 }

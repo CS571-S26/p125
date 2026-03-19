@@ -14,8 +14,8 @@ const HEAD = '#7eecd4'   // bright mint (site lightest accent)
 const HEAD_HL = '#c2f7ec'   // 8-bit highlight strip on head
 const BODY_NEAR = '#45d4b0'   // body near head
 const BODY_FAR = '#237a65'   // body near tail
-const BORDER = '#2a9c89'   // wall tiles
-const BORDER_HL = '#45d4b0'   // wall highlight
+const BORDER = '#1a4a3e'   // wall tiles (dark)
+const BORDER_HL = '#245c4f'   // wall highlight
 const FOOD = '#f04040'   // red food
 const FOOD_HL = '#ff8080'   // red highlight
 const FOOD_DIM = '#6b1a1a'   // red dim (blink off state)
@@ -119,7 +119,7 @@ class SnakeGame extends GameEngine {
       this.score++
       this.food = randomFood(this.snake)
       playSound('eat', this.isMuted())
-      this.eatFlash = 20
+      this.eatFlash = 50
       this.onScoreUpdate?.(this.score)
     } else {
       this.snake.pop()
@@ -181,19 +181,23 @@ class SnakeGame extends GameEngine {
       this.block(this.snake[i].x, this.snake[i].y, color)
     }
 
-    // Snake head — glow only during eat flash, eases out over 20 frames
-    const head = this.snake[0]
+    // Eat flash — smooth sine ease-out over 50 frames (~0.83 s at 60 fps)
     if (this.eatFlash > 0) {
-      const t = this.eatFlash / 20   // 1 → 0
-      const ease = t * t                // ease-out quad
+      const t    = this.eatFlash / 50              // 1 → 0
+      const ease = Math.sin(t * Math.PI / 2)       // sine ease-out: smooth tail
+      // Canvas-wide teal wash
+      ctx.fillStyle = `rgba(126,236,212,${(ease * 0.09).toFixed(3)})`
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      // Head glow
       ctx.shadowColor = HEAD
-      ctx.shadowBlur = ease * 22
+      ctx.shadowBlur  = ease * 26
+      this.eatFlash--
     }
+
+    const head = this.snake[0]
     this.block(head.x, head.y, HEAD)
     this.highlight(head.x, head.y, HEAD_HL)
     ctx.shadowBlur = 0
-
-    if (this.eatFlash > 0) this.eatFlash--
   }
 
   private renderBorder(): void {

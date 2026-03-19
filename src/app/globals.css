@@ -5,6 +5,17 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
+  /* ── Game UI palette ──────────────────────────────────────────────────────── */
+  --color-game-bg:      var(--game-bg);
+  --color-game-surface: var(--game-surface);
+  --color-game-border:  var(--game-border);
+  --color-game-accent:  var(--game-accent);
+  --color-game-mid:     var(--game-mid);
+  --color-game-dim:     var(--game-dim);
+  --color-game-muted:   var(--game-muted);
+  --color-game-divider: var(--game-divider);
+  --color-game-line:    var(--game-line);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -48,6 +59,17 @@
 }
 
 :root {
+  /* ── Game UI palette ──────────────────────────────────────────────────────── */
+  --game-bg:      #0d1117;   /* deep background / canvas bg                    */
+  --game-surface: #080c10;   /* footer strip / slightly darker surface          */
+  --game-border:  #2a9c89;   /* teal border, wall colour                        */
+  --game-accent:  #7eecd4;   /* bright mint — score, selected item, highlights  */
+  --game-mid:     #45d4b0;   /* mid teal — cursor, secondary elements           */
+  --game-dim:     #237a65;   /* dim teal — control hints, unselected items      */
+  --game-muted:   #1a4d40;   /* very dim — keyboard hint labels                 */
+  --game-divider: #1a3d35;   /* separator lines inside overlays                 */
+  --game-line:    #0f1a14;   /* very dark border — footer strip edge            */
+
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -125,6 +147,12 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  .font-pixel {
+    font-family: var(--font-pixel), monospace;
   }
 }
 

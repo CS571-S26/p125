@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react'
 import { useGame } from '@/contexts/game-context'
 import { useTerminal } from '@/hooks/use-terminal'
 import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 import { COMMANDS } from '@/lib/terminal/commands'
 import { makeGamesCommand } from '@/lib/terminal/game-commands'
 
@@ -18,27 +19,38 @@ export function TerminalWidget() {
     useTerminal()
   const { activeGame, lastScore, launchGame } = useGame()
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const cardRef  = useRef<HTMLDivElement | null>(null)
 
-  // Register the games command on mount (needs launchGame from context)
   useEffect(() => {
     COMMANDS['games'] = makeGamesCommand(launchGame)
   }, [launchGame])
 
-  // Append score line when a game exits
   useEffect(() => {
     if (lastScore) {
       appendLine('system', `[${lastScore.gameId}] Game over — score: ${lastScore.score}`)
     }
   }, [lastScore]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-focus input after commands, but not while a game is open
   useEffect(() => {
     if (!activeGame) inputRef.current?.focus()
   }, [lines, activeGame])
 
+  // Scroll card into view and expand it when a game launches
+  useEffect(() => {
+    if (activeGame) {
+      setTimeout(() => {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 50)
+    }
+  }, [activeGame])
+
   return (
     <Card
-      className="h-[400px] flex flex-col shadow-none border-border overflow-hidden cursor-text"
+      ref={cardRef}
+      className={cn(
+        'flex flex-col shadow-none border-border overflow-hidden cursor-text transition-[height] duration-300',
+        activeGame ? 'h-[480px]' : 'h-[400px]',
+      )}
       onClick={() => { if (!activeGame) inputRef.current?.focus() }}
     >
       <TerminalTitleBar />
@@ -53,7 +65,6 @@ export function TerminalWidget() {
           />
       }
 
-      {/* Hidden input — disabled while a game overlay is open */}
       <input
         ref={inputRef}
         value={input}

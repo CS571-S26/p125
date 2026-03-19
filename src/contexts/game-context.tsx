@@ -7,6 +7,7 @@ import type { GameConfig, GameId } from '@/types/games'
 interface GameContextValue {
   activeGame: GameId | null
   lastScore: { gameId: GameId; score: number } | null
+  liveScore: number | null
   isMuted: boolean
   isPaused: boolean
   activeConfig: GameConfig | null
@@ -15,6 +16,7 @@ interface GameContextValue {
   toggleMute: () => void
   setIsPaused: (v: boolean) => void
   setActiveConfig: (c: GameConfig | null) => void
+  setLiveScore: (s: number) => void
 }
 
 const GameContext = createContext<GameContextValue | null>(null)
@@ -25,6 +27,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [isMuted, setIsMuted] = useState(false)
   const [isPaused, setIsPaused] = useState(false)
   const [activeConfig, setActiveConfig] = useState<GameConfig | null>(null)
+  const [liveScore, setLiveScore] = useState<number | null>(null)
 
   const launchGame = useCallback((id: GameId) => {
     setActiveGame(id)
@@ -38,7 +41,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       return null
     })
     setIsPaused(false)
-    setActiveConfig(null)
+    setLiveScore(null)
   }, [])
 
   const toggleMute = useCallback(() => setIsMuted(m => !m), [])
@@ -47,6 +50,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     <GameContext.Provider value={{
       activeGame,
       lastScore,
+      liveScore,
       isMuted,
       isPaused,
       activeConfig,
@@ -55,6 +59,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       toggleMute,
       setIsPaused,
       setActiveConfig,
+      setLiveScore,
     }}>
       {children}
     </GameContext.Provider>

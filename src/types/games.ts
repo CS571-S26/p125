@@ -16,10 +16,10 @@ export interface GameConfig {
     canvas: HTMLCanvasElement,
     onExit: (score: number) => void,
     isMuted: () => boolean,
+    onScoreUpdate?: (score: number) => void,
   ): GameControls
 }
 
 export interface GameModule {
   config: GameConfig
 }
-// No GamePalette type — palette is fully local to each game file, never exported

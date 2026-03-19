@@ -1,25 +1,36 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-
 import { useGame } from '@/contexts/game-context'
-import { useTerminal } from '@/hooks/use-terminal'
-import { Card } from '@/components/ui/card'
-import { cn } from '@/lib/utils'
+import { AnimatePresence, motion, Transition } from 'motion/react'
+
 import { COMMANDS } from '@/lib/terminal/commands'
 import { makeGamesCommand } from '@/lib/terminal/game-commands'
-
+import { useTerminal } from '@/hooks/use-terminal'
+import { Card } from '@/components/ui/card'
 import { GamePanel } from '@/components/games/game-panel'
 
 import { TerminalTitleBar } from './chrome/terminal-title-bar'
 import { TerminalStream } from './stream/terminal-stream'
 
+const SPRING = {
+  type: 'spring',
+  stiffness: 400,
+  damping: 45,
+} as const satisfies Transition
+
 export function TerminalWidget() {
-  const { lines, input, isLoading, handleInputChange, handleKeyDown, outputRef, appendLine } =
-    useTerminal()
+  const {
+    lines,
+    input,
+    isLoading,
+    handleInputChange,
+    handleKeyDown,
+    outputRef,
+    appendLine,
+  } = useTerminal()
   const { activeGame, lastScore, launchGame } = useGame()
   const inputRef = useRef<HTMLInputElement | null>(null)
-  const cardRef  = useRef<HTMLDivElement | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
@@ -28,7 +39,10 @@ export function TerminalWidget() {
 
   useEffect(() => {
     if (lastScore) {
-      appendLine('system', `[${lastScore.gameId}] Game over — score: ${lastScore.score}`)
+      appendLine(
+        'system',
+        `[${lastScore.gameId}] Game over — score: ${lastScore.score}`,
+      )
     }
   }, [lastScore]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -36,37 +50,34 @@ export function TerminalWidget() {
     if (!activeGame) inputRef.current?.focus()
   }, [lines, activeGame])
 
-  // Scroll card into view and expand it when a game launches
-  useEffect(() => {
-    if (activeGame) {
-      setTimeout(() => {
-        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-      }, 50)
-    }
-  }, [activeGame])
-
   return (
-    <Card
-      ref={cardRef}
-      className={cn(
-        'flex flex-col shadow-none border-border overflow-hidden cursor-text transition-[height] duration-300',
-        activeGame ? 'h-[480px]' : 'h-[400px]',
+    <>
+      {/* In-flow slot: terminal when idle, spacer when game is active */}
+      {activeGame ? (
+        <div className="h-[400px]" />
+      ) : (
+        <motion.div
+          layoutId="terminal-card"
+          transition={SPRING}
+          className="h-[400px]"
+        >
+          <Card
+            className="flex flex-col shadow-none border-border overflow-hidden cursor-text h-full"
+            onClick={() => inputRef.current?.focus()}
+          >
+            <TerminalTitleBar />
+            <TerminalStream
+              lines={lines}
+              input={input}
+              isLoading={isLoading}
+              isFocused={isFocused}
+              outputRef={outputRef}
+            />
+          </Card>
+        </motion.div>
       )}
-      onClick={() => { if (!activeGame) inputRef.current?.focus() }}
-    >
-      <TerminalTitleBar />
 
-      {activeGame
-        ? <GamePanel />
-        : <TerminalStream
-            lines={lines}
-            input={input}
-            isLoading={isLoading}
-            isFocused={isFocused}
-            outputRef={outputRef}
-          />
-      }
-
+      {/* Hidden input always present so focus restores after game exits */}
       <input
         ref={inputRef}
         value={input}
@@ -82,6 +93,33 @@ export function TerminalWidget() {
         aria-label="Terminal input"
         className="sr-only"
       />
-    </Card>
+
+      <AnimatePresence>
+        {activeGame && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-background/70 backdrop-blur-sm"
+            />
+            <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+              <motion.div
+                layoutId="terminal-card"
+                transition={SPRING}
+                className="w-full max-w-3xl px-4 h-[480px] pointer-events-auto"
+              >
+                <Card className="flex flex-col shadow-none border-border overflow-hidden h-full">
+                  <TerminalTitleBar />
+                  <GamePanel />
+                </Card>
+              </motion.div>
+            </div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }

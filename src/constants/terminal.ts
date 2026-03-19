@@ -1,0 +1,1 @@
+export const TERMINAL_PROMPT = 'visitor@vishrut.tech:~$'

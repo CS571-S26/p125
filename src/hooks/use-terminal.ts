@@ -34,7 +34,7 @@ const INITIAL_STATE: TerminalState = {
 
 export function useTerminal() {
   const [state, setState] = useState<TerminalState>(INITIAL_STATE)
-  const outputRef = useRef<HTMLDivElement>(null)
+  const outputRef = useRef<HTMLDivElement | null>(null)
   // Keep a ref to state so async callbacks always see current state
   const stateRef = useRef(state)
   useEffect(() => { stateRef.current = state }, [state])

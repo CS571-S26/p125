@@ -1,4 +1,4 @@
-import { TerminalWidgetStub } from "../terminal/terminal-widget-stub"
+import { TerminalWidget } from '../terminal/terminal-widget'
 
 export function TerminalSection() {
   return (
@@ -6,7 +6,7 @@ export function TerminalSection() {
       <p className="text-xs text-muted-foreground font-(family-name:--font-jetbrains-mono) mb-4">
         Type <span className="text-foreground">help</span> to explore.
       </p>
-      <TerminalWidgetStub />
+      <TerminalWidget />
     </section>
   )
 }

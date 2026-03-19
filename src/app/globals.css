@@ -16,6 +16,7 @@
   --color-game-divider: var(--game-divider);
   --color-game-line:    var(--game-line);
 
+  --color-terminal-accent: var(--terminal-accent);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
@@ -59,17 +60,27 @@
 }
 
 :root {
-  /* ── Game UI palette ──────────────────────────────────────────────────────── */
-  --game-bg:      #0d1117;   /* deep background / canvas bg                    */
-  --game-surface: #080c10;   /* footer strip / slightly darker surface          */
-  --game-border:  #2a9c89;   /* teal border, wall colour                        */
-  --game-accent:  #7eecd4;   /* bright mint — score, selected item, highlights  */
-  --game-mid:     #45d4b0;   /* mid teal — cursor, secondary elements           */
-  --game-dim:     #237a65;   /* dim teal — control hints, unselected items      */
-  --game-muted:   #1a4d40;   /* very dim — keyboard hint labels                 */
-  --game-divider: #1a3d35;   /* separator lines inside overlays                 */
-  --game-line:    #0f1a14;   /* very dark border — footer strip edge            */
+  /* ── Teal spectrum — shared across game UI, terminal, and any teal accent ── */
+  /* chart-1 … chart-5 cover the full ramp from bright mint to dark teal.      */
+  /* All teal accents throughout the app reference these instead of new values. */
+  --chart-1: oklch(0.855 0.138 181.071);   /* bright mint  */
+  --chart-2: oklch(0.704 0.14  182.503);   /* vivid teal   */
+  --chart-3: oklch(0.6   0.118 184.704);   /* medium teal  */
+  --chart-4: oklch(0.511 0.096 186.391);   /* mid-dark     */
+  --chart-5: oklch(0.437 0.078 188.216);   /* dark teal    */
 
+  /* ── Game UI palette — mapped to chart spectrum ──────────────────────────── */
+  --game-bg:      #0d1117;          /* deep background / canvas bg              */
+  --game-surface: #080c10;          /* footer strip / slightly darker surface   */
+  --game-border:  var(--chart-3);   /* wall colour                              */
+  --game-accent:  var(--chart-1);   /* score, selected item, highlights         */
+  --game-mid:     var(--chart-2);   /* cursor, secondary elements               */
+  --game-dim:     var(--chart-4);   /* control hints, unselected items          */
+  --game-muted:   var(--chart-5);   /* keyboard hint labels                     */
+  --game-divider: #1a3d35;          /* separator lines inside overlays          */
+  --game-line:    #0f1a14;          /* very dark border — footer strip edge     */
+
+  --terminal-accent: var(--chart-2);   /* command names — brighter than the prompt */
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -88,11 +99,6 @@
   --border: oklch(0.92 0.004 286.32);
   --input: oklch(0.92 0.004 286.32);
   --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.855 0.138 181.071);
-  --chart-2: oklch(0.704 0.14 182.503);
-  --chart-3: oklch(0.6 0.118 184.704);
-  --chart-4: oklch(0.511 0.096 186.391);
-  --chart-5: oklch(0.437 0.078 188.216);
   --radius: 0.45rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.141 0.005 285.823);
@@ -105,6 +111,7 @@
 }
 
 .dark {
+  --terminal-accent: var(--chart-1);   /* brightest mint — pops on dark terminal bg */
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -123,11 +130,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.855 0.138 181.071);
-  --chart-2: oklch(0.704 0.14 182.503);
-  --chart-3: oklch(0.6 0.118 184.704);
-  --chart-4: oklch(0.511 0.096 186.391);
-  --chart-5: oklch(0.437 0.078 188.216);
   --sidebar: oklch(0.21 0.006 285.885);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.704 0.14 182.503);

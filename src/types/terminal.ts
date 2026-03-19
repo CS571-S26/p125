@@ -31,7 +31,10 @@ export interface CommandResult {
 
 export interface CommandDef {
   description: string
+  /** One-line description shown in `help` listing. */
   usage?: string
+  /** Extended info shown in `help <command>`. Supports multiple lines as an array. */
+  details?: string[]
   aliases?: string[]
   type: 'sync' | 'async'
   handler: (args: string[], state: TerminalState) => CommandResult | Promise<CommandResult>

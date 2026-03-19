@@ -1,8 +1,9 @@
 import type { GameId } from '@/types/games'
 import type { CommandDef } from '@/types/terminal'
+import { Muted, Dim, HelpRow } from '@/components/terminal/rich'
 
 const GAME_LIST: { id: GameId; description: string }[] = [
-  { id: 'snake', description: 'Classic snake on a canvas overlay' },
+  { id: 'snake', description: 'Classic snake' },
 ]
 
 export function makeGamesCommand(launchGame: (id: GameId) => void): CommandDef {
@@ -15,13 +16,14 @@ export function makeGamesCommand(launchGame: (id: GameId) => void): CommandDef {
       if (!args.length) {
         return {
           lines: [
-            { type: 'output' as const, content: 'Available games:' },
             ...GAME_LIST.map(g => ({
               type: 'output' as const,
-              content: `  ${g.id.padEnd(16)}${g.description}`,
+              content: <HelpRow name={g.id} description={g.description} />,
             })),
-            { type: 'output' as const, content: '' },
-            { type: 'output' as const, content: "Usage: games <name>" },
+            {
+              type: 'output' as const,
+              content: <Dim>type <Muted>games &lt;name&gt;</Muted> to launch</Dim>,
+            },
           ],
         }
       }

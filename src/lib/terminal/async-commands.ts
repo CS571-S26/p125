@@ -30,8 +30,15 @@ export async function handlePrice(args: string[]): Promise<CommandResult> {
 
 export async function handleDefine(args: string[]): Promise<CommandResult> {
   const word = args[0]?.toLowerCase()
-  if (!word) {
-    return err('Usage: define <word>  e.g. define ephemeral')
-  }
-  return out("Define coming soon...")
+  if (!word)     return err('Usage: define <word>  e.g. define ephemeral')
+  
+  const res = await fetch(`/api/terminal/define?word=${encodeURIComponent(word)}`)
+  const data = await res.json()
+
+  if (!res.ok) return err(data.error ?? 'Could not fetch definition.')
+
+  return out(
+    `${data.word}  (${data.partOfSpeech})`,
+    `  ${data.definition}`,
+  )
 }

@@ -1,4 +1,5 @@
 import type { GameConfig, GameControls } from '@/types/games'
+import type { Point } from './types'
 
 import { GameEngine } from './engine'
 import { playSound } from './audio'
@@ -18,13 +19,11 @@ const BORDER = '#1a4a3e'   // wall tiles (dark)
 const BORDER_HL = '#245c4f'   // wall highlight
 const FOOD = '#f04040'   // red food
 const FOOD_HL = '#ff8080'   // red highlight
-const FOOD_DIM = '#6b1a1a'   // red dim (blink off state)
 const OVERLAY = 'rgba(13,17,23,0.93)'
 const OVER_DIM = '#45d4b0'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-type Point = { x: number; y: number }
 type Dir = { dx: number; dy: number }
 
 function randInt(min: number, max: number): number {
@@ -130,18 +129,16 @@ class SnakeGame extends GameEngine {
 
   /** Filled pixel block for a grid cell. */
   private block(col: number, row: number, color: string): void {
-    const { ctx, cellW, cellH, pad } = this
-    ctx.fillStyle = color
-    ctx.fillRect(col * cellW + pad, row * cellH + pad, cellW - pad * 2, cellH - pad * 2)
+    const { cellW, cellH, pad } = this
+    this.fillRect(col * cellW + pad, row * cellH + pad, cellW - pad * 2, cellH - pad * 2, color)
   }
 
   /** 8-bit style top+left highlight strip on a cell (drawn after the base block). */
   private highlight(col: number, row: number, color: string): void {
-    const { ctx, cellW, cellH, pad } = this
+    const { cellW, cellH, pad } = this
     const s = Math.max(1, pad - 1)
-    ctx.fillStyle = color
-    ctx.fillRect(col * cellW + pad, row * cellH + pad, cellW - pad * 2, s)  // top
-    ctx.fillRect(col * cellW + pad, row * cellH + pad, s, cellH - pad * 2)  // left
+    this.fillRect(col * cellW + pad, row * cellH + pad, cellW - pad * 2, s, color)  // top
+    this.fillRect(col * cellW + pad, row * cellH + pad, s, cellH - pad * 2, color)  // left
   }
 
   // ─── Main render ────────────────────────────────────────────────────────────
@@ -151,16 +148,14 @@ class SnakeGame extends GameEngine {
     this.frame++
 
     // Background
-    ctx.fillStyle = BG
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    this.clearCanvas(BG)
 
     // Subtle pixel grid — draw thin lines at each cell boundary
-    ctx.fillStyle = GRID
     for (let c = 0; c <= COLS; c++) {
-      ctx.fillRect(c * cellW, 0, 1, canvas.height)
+      this.fillRect(c * cellW, 0, 1, canvas.height, GRID)
     }
     for (let r = 0; r <= ROWS; r++) {
-      ctx.fillRect(0, r * cellH, canvas.width, 1)
+      this.fillRect(0, r * cellH, canvas.width, 1, GRID)
     }
 
     // Border walls
@@ -183,14 +178,14 @@ class SnakeGame extends GameEngine {
 
     // Eat flash — smooth sine ease-out over 50 frames (~0.83 s at 60 fps)
     if (this.eatFlash > 0) {
-      const t    = this.eatFlash / 50              // 1 → 0
+      const t = this.eatFlash / 50              // 1 → 0
       const ease = Math.sin(t * Math.PI / 2)       // sine ease-out: smooth tail
       // Canvas-wide teal wash
       ctx.fillStyle = `rgba(126,236,212,${(ease * 0.09).toFixed(3)})`
       ctx.fillRect(0, 0, canvas.width, canvas.height)
       // Head glow
       ctx.shadowColor = HEAD
-      ctx.shadowBlur  = ease * 26
+      ctx.shadowBlur = ease * 26
       this.eatFlash--
     }
 
@@ -214,24 +209,19 @@ class SnakeGame extends GameEngine {
   }
 
   private renderDeath(): void {
-    const { ctx, canvas, cellH } = this
+    const { canvas, cellH } = this
     const cx = canvas.width / 2
     const cy = canvas.height / 2
     const unit = Math.max(6, Math.min(cellH - 2, 10))
 
-    ctx.fillStyle = OVERLAY
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+    this.fillRect(0, 0, canvas.width, canvas.height, OVERLAY)
 
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-
-    ctx.font = `${unit}px "Press Start 2P", monospace`
-    ctx.fillStyle = HEAD
-    ctx.fillText('GAME OVER', cx, cy - unit * 2.5)
-
-    ctx.font = `${Math.max(5, unit - 2)}px "Press Start 2P", monospace`
-    ctx.fillStyle = OVER_DIM
-    ctx.fillText(`SCORE  ${this.score}`, cx, cy + unit)
+    this.drawText('GAME OVER', cx, cy - unit * 2.5, {
+      size: unit, color: HEAD, align: 'center', baseline: 'middle',
+    })
+    this.drawText(`SCORE  ${this.score}`, cx, cy + unit, {
+      size: Math.max(5, unit - 2), color: OVER_DIM, align: 'center', baseline: 'middle',
+    })
   }
 }
 

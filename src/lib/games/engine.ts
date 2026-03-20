@@ -1,4 +1,5 @@
 import type { GameControls } from '@/types/games'
+import type { TextOpts } from './types'
 
 export abstract class GameEngine {
   protected readonly canvas: HTMLCanvasElement
@@ -45,6 +46,32 @@ export abstract class GameEngine {
   protected onEnter():      void {}
   /** Called only for keys not dispatched to a named handler above */
   protected onKeyDown(_e: KeyboardEvent): void {}
+
+  // ─── Drawing utilities ────────────────────────────────────────────────────
+
+  /** Fill the entire canvas with a solid color. */
+  protected clearCanvas(color: string): void {
+    this.ctx.fillStyle = color
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height)
+  }
+
+  /** Draw a filled rectangle. */
+  protected fillRect(x: number, y: number, w: number, h: number, color: string): void {
+    this.ctx.fillStyle = color
+    this.ctx.fillRect(x, y, w, h)
+  }
+
+  /** Draw text. Resets textAlign/textBaseline to defaults after drawing unless opts specify them. */
+  protected drawText(text: string, x: number, y: number, opts?: TextOpts): void {
+    const { ctx } = this
+    ctx.textAlign    = opts?.align    ?? 'left'
+    ctx.textBaseline = opts?.baseline ?? 'alphabetic'
+    const size = opts?.size ?? 16
+    const font = opts?.font ?? '"Press Start 2P", monospace'
+    ctx.font      = `${size}px ${font}`
+    ctx.fillStyle = opts?.color ?? '#ffffff'
+    ctx.fillText(text, x, y)
+  }
 
   // ─── Helpers ──────────────────────────────────────────────────────────────
 

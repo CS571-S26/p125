@@ -1,9 +1,15 @@
 import type { CommandResult } from '@/types/terminal'
 
-import { out, err } from './helpers'
+import { err, out } from './helpers'
 
 export async function handleNowPlaying(): Promise<CommandResult> {
-  return out("Now playing coming soon...")
+  const res = await fetch('/api/terminal/nowplaying')
+  const data = await res.json()
+
+  if (!res.ok) return err(data.error ?? 'Could not fetch Spotify data.')
+
+  const status = data.nowPlaying ? '▶ now playing' : '⏸ last played'
+  return out(`${status}: ${data.track} — ${data.artist}`)
 }
 
 export async function handleWeather(): Promise<CommandResult> {

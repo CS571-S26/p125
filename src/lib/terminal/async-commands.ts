@@ -11,7 +11,13 @@ export async function handleWeather(): Promise<CommandResult> {
 }
 
 export async function handleJoke(): Promise<CommandResult> {
-  return out("Joke coming soon...")
+const res = await fetch('/api/terminal/joke')
+  const data = await res.json()
+
+  if (!res.ok) return err(data.error ?? 'Could not fetch joke.')
+
+  if (data.type === 'single')   return out(data.joke)
+  return out(data.setup, `  → ${data.delivery}`)
 }
 
 export async function handlePrice(args: string[]): Promise<CommandResult> {

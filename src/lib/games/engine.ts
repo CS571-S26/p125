@@ -66,6 +66,13 @@ export abstract class GameEngine {
     this.ctx.fillRect(x, y, w, h)
   }
 
+  /** Draw a stroked (outline) rectangle. */
+  protected strokeRect(x: number, y: number, w: number, h: number, color: string, lineWidth = 1): void {
+    this.ctx.strokeStyle = color
+    this.ctx.lineWidth = lineWidth
+    this.ctx.strokeRect(x, y, w, h)
+  }
+
   /** Draw text. Resets textAlign/textBaseline to defaults after drawing unless opts specify them. */
   protected drawText(text: string, x: number, y: number, opts?: TextOpts): void {
     const { ctx } = this

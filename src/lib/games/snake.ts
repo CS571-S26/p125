@@ -1,5 +1,4 @@
-import type { GameConfig, GameControls } from '@/types/games'
-import type { Point } from './types'
+import type { GameConfig, GameControls, Point } from '@/types/games'
 
 import { GameEngine } from './engine'
 import { playSound } from './audio'
@@ -19,8 +18,6 @@ const BORDER = '#1a4a3e'   // wall tiles (dark)
 const BORDER_HL = '#245c4f'   // wall highlight
 const FOOD = '#f04040'   // red food
 const FOOD_HL = '#ff8080'   // red highlight
-const OVERLAY = 'rgba(13,17,23,0.93)'
-const OVER_DIM = '#45d4b0'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -84,6 +81,17 @@ class SnakeGame extends GameEngine {
     this.nextDir = { dx: 1, dy: 0 }
     this.food = randomFood(this.snake)
     this.score = 0
+    this.gameTitle = 'SNAKE'
+  }
+
+  protected restart(): void {
+    this.snake = [{ x: 10, y: 6 }, { x: 9, y: 6 }, { x: 8, y: 6 }]
+    this.dir = { dx: 1, dy: 0 }
+    this.nextDir = { dx: 1, dy: 0 }
+    this.food = randomFood(this.snake)
+    this.score = 0
+    this.frame = 0
+    this.eatFlash = 0
   }
 
   protected onArrowUp(): void { if (this.dir.dy !== 1) this.nextDir = { dx: 0, dy: -1 } }
@@ -106,10 +114,8 @@ class SnakeGame extends GameEngine {
       newHead.y <= 0 || newHead.y >= ROWS - 1 ||
       this.snake.some(s => s.x === newHead.x && s.y === newHead.y)
     ) {
-      this.render()
-      this.renderDeath()
       playSound('die', this.isMuted())
-      this.exit(this.score, 2000)
+      this.exit(this.score, 0)
       return
     }
 
@@ -196,6 +202,7 @@ class SnakeGame extends GameEngine {
   }
 
   private renderBorder(): void {
+
     for (let c = 0; c < COLS; c++) {
       this.block(c, 0, BORDER)
       this.highlight(c, 0, BORDER_HL)
@@ -206,22 +213,6 @@ class SnakeGame extends GameEngine {
       this.highlight(0, r, BORDER_HL)
       this.block(COLS - 1, r, BORDER)
     }
-  }
-
-  private renderDeath(): void {
-    const { canvas, cellH } = this
-    const cx = canvas.width / 2
-    const cy = canvas.height / 2
-    const unit = Math.max(6, Math.min(cellH - 2, 10))
-
-    this.fillRect(0, 0, canvas.width, canvas.height, OVERLAY)
-
-    this.drawText('GAME OVER', cx, cy - unit * 2.5, {
-      size: unit, color: HEAD, align: 'center', baseline: 'middle',
-    })
-    this.drawText(`SCORE  ${this.score}`, cx, cy + unit, {
-      size: Math.max(5, unit - 2), color: OVER_DIM, align: 'center', baseline: 'middle',
-    })
   }
 }
 

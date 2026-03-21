@@ -1,5 +1,4 @@
-import type { GameControls } from '@/types/games'
-import type { TextOpts } from './types'
+import type { GameControls, GameState, TextOpts } from '@/types/games'
 
 export abstract class GameEngine {
   protected readonly canvas: HTMLCanvasElement
@@ -8,6 +7,7 @@ export abstract class GameEngine {
   protected readonly isMuted: () => boolean
 
   protected tickMs = 120
+  protected gameTitle = ''
 
   private rafId = 0
   private lastTick = 0
@@ -15,6 +15,9 @@ export abstract class GameEngine {
   private stopped = false
   private exitTimeout: ReturnType<typeof setTimeout> | null = null
   private keyHandler: ((e: KeyboardEvent) => void) | null = null
+
+  private gameState: GameState = 'intro'
+  private finalScore = 0
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -31,6 +34,8 @@ export abstract class GameEngine {
 
   protected abstract tick(): void
   protected abstract render(): void
+  /** Reset all game state to initial values. Called on restart from gameover screen. */
+  protected abstract restart(): void
 
   // ─── Key handlers — override as needed, default no-op ────────────────────
 
@@ -87,13 +92,59 @@ export abstract class GameEngine {
   }
 
   /**
-   * Stop the RAF loop and schedule the onExit callback.
-   * Safe to call from inside tick() — the engine will not call render()
-   * or schedule another frame after tick() returns.
+   * Transition to the gameover screen with the given score.
+   * If delayMs > 0, the loop is stopped for that duration, then resumes on the gameover screen.
+   * If delayMs = 0, transitions immediately (loop keeps running).
    */
   protected exit(score: number, delayMs = 0): void {
-    this.stopped = true
-    this.exitTimeout = setTimeout(() => this.onExit(score), delayMs)
+    this.finalScore = score
+    if (delayMs > 0) {
+      this.stopped = true
+      this.exitTimeout = setTimeout(() => {
+        this.stopped = false
+        this.gameState = 'gameover'
+        this.rafId = requestAnimationFrame(ts => this.loop(ts))
+      }, delayMs)
+    } else {
+      this.gameState = 'gameover'
+    }
+  }
+
+  // ─── Default screens ──────────────────────────────────────────────────────
+
+  protected renderIntro(): void {
+    const { canvas } = this
+    const cx = canvas.width / 2
+    const cy = canvas.height / 2
+    const unit = Math.min(canvas.width / 20, canvas.height / 10, 14)
+
+    this.clearCanvas('#0d1117')
+
+    this.drawText(this.gameTitle, cx, cy - unit * 3, {
+      size: unit * 1.5, color: '#7eecd4', align: 'center', baseline: 'middle',
+    })
+    this.drawText('PRESS SPACE TO START', cx, cy + unit * 2, {
+      size: Math.max(5, unit * 0.7), color: '#45d4b0', align: 'center', baseline: 'middle',
+    })
+  }
+
+  protected renderGameOver(): void {
+    const { canvas } = this
+    const cx = canvas.width / 2
+    const cy = canvas.height / 2
+    const unit = Math.min(canvas.width / 20, canvas.height / 10, 14)
+
+    this.clearCanvas('#0d1117')
+
+    this.drawText('GAME OVER', cx, cy - unit * 2.5, {
+      size: unit, color: '#7eecd4', align: 'center', baseline: 'middle',
+    })
+    this.drawText(`SCORE  ${this.finalScore}`, cx, cy, {
+      size: Math.max(5, unit * 0.8), color: '#45d4b0', align: 'center', baseline: 'middle',
+    })
+    this.drawText('SPACE — play again    ESC — quit', cx, cy + unit * 2.5, {
+      size: Math.max(4, unit * 0.55), color: '#237a65', align: 'center', baseline: 'middle',
+    })
   }
 
   // ─── Lifecycle ────────────────────────────────────────────────────────────
@@ -121,12 +172,28 @@ export abstract class GameEngine {
       return
     }
 
+    if (this.gameState === 'intro') {
+      this.renderIntro()
+      this.rafId = requestAnimationFrame(ts => this.loop(ts))
+      return
+    }
+
+    if (this.gameState === 'gameover') {
+      this.renderGameOver()
+      this.rafId = requestAnimationFrame(ts => this.loop(ts))
+      return
+    }
+
+    // playing
     if (timestamp - this.lastTick >= this.tickMs) {
       this.lastTick = timestamp
       this.tick()
-      // If tick() called exit(), stopped is now true.
-      // Do not call render() or schedule another frame.
       if (this.stopped) return
+      // State may have changed to gameover inside tick(); schedule next frame to render it
+      if (this.gameState !== 'playing') {
+        this.rafId = requestAnimationFrame(ts => this.loop(ts))
+        return
+      }
     }
 
     this.render()
@@ -134,6 +201,30 @@ export abstract class GameEngine {
   }
 
   private dispatchKey(e: KeyboardEvent): void {
+    // Intro screen: Space/Enter starts game, Escape exits
+    if (this.gameState === 'intro') {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault()
+        this.gameState = 'playing'
+      } else if (e.key === 'Escape') {
+        this.onExit(0)
+      }
+      return
+    }
+
+    // Gameover screen: Space/Enter restarts, Escape exits
+    if (this.gameState === 'gameover') {
+      if (e.key === ' ' || e.key === 'Enter') {
+        e.preventDefault()
+        this.restart()
+        this.gameState = 'playing'
+      } else if (e.key === 'Escape') {
+        this.onExit(this.finalScore)
+      }
+      return
+    }
+
+    // Playing — dispatch to named handlers
     switch (e.key) {
       case 'ArrowUp':    e.preventDefault(); this.onArrowUp();    return
       case 'ArrowDown':  e.preventDefault(); this.onArrowDown();  return

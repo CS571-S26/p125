@@ -14,7 +14,8 @@ export abstract class GameEngine {
   private paused = false
   private stopped = false
   private exitTimeout: ReturnType<typeof setTimeout> | null = null
-  private keyHandler: ((e: KeyboardEvent) => void) | null = null
+  private keyHandler:   ((e: KeyboardEvent) => void) | null = null
+  private keyUpHandler: ((e: KeyboardEvent) => void) | null = null
 
   private gameState: GameState = 'intro'
   private finalScore = 0
@@ -51,6 +52,8 @@ export abstract class GameEngine {
   protected onEnter():      void {}
   /** Called only for keys not dispatched to a named handler above */
   protected onKeyDown(_e: KeyboardEvent): void {}
+  /** Called on keyup for any key */
+  protected onKeyUp(_e: KeyboardEvent): void {}
 
   // ─── Drawing utilities ────────────────────────────────────────────────────
 
@@ -158,8 +161,11 @@ export abstract class GameEngine {
 
   public run(): GameControls {
     const handler = (e: KeyboardEvent) => this.dispatchKey(e)
-    this.keyHandler = handler
+    const upHandler = (e: KeyboardEvent) => this.onKeyUp(e)
+    this.keyHandler   = handler
+    this.keyUpHandler = upHandler
     document.addEventListener('keydown', handler)
+    document.addEventListener('keyup', upHandler)
     this.rafId = requestAnimationFrame(ts => this.loop(ts))
 
     return {
@@ -253,6 +259,10 @@ export abstract class GameEngine {
     if (this.keyHandler) {
       document.removeEventListener('keydown', this.keyHandler)
       this.keyHandler = null
+    }
+    if (this.keyUpHandler) {
+      document.removeEventListener('keyup', this.keyUpHandler)
+      this.keyUpHandler = null
     }
     if (this.exitTimeout) {
       clearTimeout(this.exitTimeout)

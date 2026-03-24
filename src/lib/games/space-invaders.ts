@@ -1,6 +1,7 @@
 import type { GameConfig, GameControls } from '@/types/games'
 
 import { GameEngine } from './engine'
+import { playSound } from './audio'
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -11,25 +12,32 @@ type AlienType = 'squid' | 'crab' | 'octopus'
 
 const ROW_TYPES: AlienType[] = ['squid', 'crab', 'crab', 'octopus', 'octopus']
 
+const POINTS: Record<AlienType, number> = { squid: 30, crab: 20, octopus: 10 }
+
 const COLORS: Record<AlienType, string> = {
-  squid:   '#ffffff',   // white — classic top row
-  crab:    '#7eecd4',   // site teal
-  octopus: '#3dba96',   // deeper green
+  squid:   '#ffffff',
+  crab:    '#7eecd4',
+  octopus: '#3dba96',
 }
 
 const BG           = '#0d1117'
 const PLAYER_COLOR = '#7eecd4'
-const STEP_X       = 6
-const DROP_Y       = 14
-const MARGIN_X     = 16
+const BULLET_COLOR = '#7eecd4'
+const ALIEN_BULLET = '#f04040'
 
-// ─── Pixel-art sprites — two animation frames per type ────────────────────────
-// Each row is a string; 'X' = filled pixel, '.' = empty
+const STEP_X          = 6
+const DROP_Y          = 14
+const MARGIN_X        = 16
+const PLAYER_SPEED    = 4   // px per render frame
+const MAX_ALIEN_SHOTS = 3
+const ALIEN_FIRE_RATE = 0.015  // chance per tick per alive alien (capped)
+const BULLET_SPEED    = 5   // px per render frame
+
+// ─── Pixel-art sprites ────────────────────────────────────────────────────────
 
 type Sprite = readonly string[]
 
 const SPRITES: Record<AlienType, readonly [Sprite, Sprite]> = {
-  // 8 cols × 6 rows
   squid: [
     [
       '..XXXX..',
@@ -48,7 +56,6 @@ const SPRITES: Record<AlienType, readonly [Sprite, Sprite]> = {
       '.X....X.',
     ],
   ],
-  // 11 cols × 8 rows
   crab: [
     [
       '..X.....X..',
@@ -71,7 +78,6 @@ const SPRITES: Record<AlienType, readonly [Sprite, Sprite]> = {
       'X.........X',
     ],
   ],
-  // 12 cols × 8 rows
   octopus: [
     [
       '...XXXXXX...',
@@ -96,13 +102,27 @@ const SPRITES: Record<AlienType, readonly [Sprite, Sprite]> = {
   ],
 }
 
+// Player cannon — 4 rows × 9 cols
+const PLAYER_SPRITE: Sprite = [
+  '....X....',
+  '...XXX...',
+  '.XXXXXXX.',
+  'XXXXXXXXX',
+]
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Alien {
-  col: number
-  row: number
-  type: AlienType
+  col:   number
+  row:   number
+  type:  AlienType
   alive: boolean
+}
+
+interface Bullet {
+  x:      number
+  y:      number
+  active: boolean
 }
 
 // ─── Game ─────────────────────────────────────────────────────────────────────
@@ -110,19 +130,26 @@ interface Alien {
 class SpaceInvadersGame extends GameEngine {
   protected tickMs = 400
 
-  private aliens: Alien[] = []
-  private dir       = 1
-  private fleetX    = 0
-  private fleetY    = 0
+  private aliens:    Alien[]  = []
+  private dir        = 1
+  private fleetX     = 0
+  private fleetY     = 0
   private animFrame: 0 | 1 = 0
 
-  private pixSize = 3   // px per sprite pixel
+  private pixSize = 3
   private cellW   = 0
   private cellH   = 0
 
-  private playerX = 0
-  private playerW = 0
-  private playerH = 0
+  // Player
+  private playerX    = 0
+  private moveLeft   = false
+  private moveRight  = false
+  private lives      = 3
+  private hitFlash   = 0   // countdown frames after player hit
+
+  // Bullets
+  private playerBullet: Bullet = { x: 0, y: 0, active: false }
+  private alienBullets: Bullet[] = []
 
   private score = 0
 
@@ -137,6 +164,12 @@ class SpaceInvadersGame extends GameEngine {
     this.initAliens()
   }
 
+  // ─── Sizing ───────────────────────────────────────────────────────────────
+
+  private get playerW() { return PLAYER_SPRITE[0].length * this.pixSize }
+  private get playerH() { return PLAYER_SPRITE.length * this.pixSize }
+  private get shipY()   { return this.canvas.height - this.playerH - 20 }
+
   private initSizes(): void {
     const domRect = this.canvas.getBoundingClientRect()
     this.canvas.width  = Math.floor(domRect.width)
@@ -144,19 +177,12 @@ class SpaceInvadersGame extends GameEngine {
     const W = this.canvas.width
     const H = this.canvas.height
 
-    // pixSize: widest sprite is octopus at 12 cols; fit 11 aliens × 14 cols comfortably
     this.pixSize = Math.max(2, Math.floor((W * 0.82) / (GRID_COLS * 14)))
+    this.cellW   = Math.floor(W / GRID_COLS)
+    this.cellH   = Math.floor((H * 0.48) / GRID_ROWS)
 
-    // Cell = slot for each alien, evenly divides canvas width
-    this.cellW = Math.floor(W / GRID_COLS)
-    this.cellH = Math.floor((H * 0.48) / GRID_ROWS)
-
-    this.fleetX = 0
-    this.fleetY = Math.floor(H * 0.10)
-
-    // Player
-    this.playerW = this.pixSize * 15
-    this.playerH = this.pixSize * 4
+    this.fleetX  = 0
+    this.fleetY  = Math.floor(H * 0.10)
     this.playerX = Math.floor(W / 2 - this.playerW / 2)
   }
 
@@ -169,7 +195,8 @@ class SpaceInvadersGame extends GameEngine {
     }
   }
 
-  // Draw a pixel-art sprite at (x, y) using this.pixSize blocks
+  // ─── Drawing helpers ──────────────────────────────────────────────────────
+
   private drawSprite(sprite: Sprite, x: number, y: number, color: string): void {
     const p = this.pixSize
     for (let r = 0; r < sprite.length; r++) {
@@ -181,24 +208,38 @@ class SpaceInvadersGame extends GameEngine {
     }
   }
 
-  // Return the x offset to center a sprite of given col count within a cell
   private centerX(spriteCols: number): number {
     return Math.floor((this.cellW - spriteCols * this.pixSize) / 2)
   }
 
-  // Return the y offset to center a sprite of given row count within a cell
   private centerY(spriteRows: number): number {
     return Math.floor((this.cellH - spriteRows * this.pixSize) / 2)
   }
 
-  protected restart(): void {
-    this.score     = 0
-    this.dir       = 1
-    this.fleetX    = 0
-    this.fleetY    = Math.floor(this.canvas.height * 0.10)
-    this.animFrame = 0
-    this.initAliens()
+  // ─── Input ────────────────────────────────────────────────────────────────
+
+  protected onArrowLeft():  void { this.moveLeft  = true }
+  protected onArrowRight(): void { this.moveRight = true }
+  protected onKeyA():       void { this.moveLeft  = true }
+  protected onKeyD():       void { this.moveRight = true }
+
+  protected onKeyUp(e: KeyboardEvent): void {
+    if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') this.moveLeft  = false
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.moveRight = false
   }
+
+  protected onSpace(): void {
+    if (!this.playerBullet.active) {
+      this.playerBullet = {
+        x: this.playerX + Math.floor(this.playerW / 2),
+        y: this.shipY,
+        active: true,
+      }
+      playSound('shoot', this.isMuted())
+    }
+  }
+
+  // ─── Tick (fleet + alien fire) ────────────────────────────────────────────
 
   protected tick(): void {
     this.animFrame = this.animFrame === 0 ? 1 : 0
@@ -209,14 +250,14 @@ class SpaceInvadersGame extends GameEngine {
       return
     }
 
-    // Use cell boundaries for edge detection
-    const minCol = Math.min(...alive.map(a => a.col))
-    const maxCol = Math.max(...alive.map(a => a.col))
+    // Fleet movement
+    const minCol    = Math.min(...alive.map(a => a.col))
+    const maxCol    = Math.max(...alive.map(a => a.col))
     const leftEdge  = this.fleetX + minCol * this.cellW
     const rightEdge = this.fleetX + (maxCol + 1) * this.cellW
 
     if (
-      (this.dir ===  1 && rightEdge + STEP_X > this.canvas.width  - MARGIN_X) ||
+      (this.dir ===  1 && rightEdge + STEP_X > this.canvas.width - MARGIN_X) ||
       (this.dir === -1 && leftEdge  - STEP_X < MARGIN_X)
     ) {
       this.fleetY += DROP_Y
@@ -224,29 +265,127 @@ class SpaceInvadersGame extends GameEngine {
     } else {
       this.fleetX += this.dir * STEP_X
     }
+
+    // Alien fires a bullet (randomly, up to MAX_ALIEN_SHOTS in flight)
+    const activeAlienShots = this.alienBullets.filter(b => b.active).length
+    if (activeAlienShots < MAX_ALIEN_SHOTS && Math.random() < ALIEN_FIRE_RATE * alive.length) {
+      // Pick a random alien from the bottom-most alive in each column
+      const colMap = new Map<number, Alien>()
+      for (const a of alive) {
+        const prev = colMap.get(a.col)
+        if (!prev || a.row > prev.row) colMap.set(a.col, a)
+      }
+      const shooters = [...colMap.values()]
+      const shooter  = shooters[Math.floor(Math.random() * shooters.length)]
+      const sprite   = SPRITES[shooter.type][0]
+      const sx = this.fleetX + shooter.col * this.cellW + this.centerX(sprite[0].length) + Math.floor(sprite[0].length * this.pixSize / 2)
+      const sy = this.fleetY + shooter.row * this.cellH + this.centerY(sprite.length) + sprite.length * this.pixSize
+      this.alienBullets.push({ x: sx, y: sy, active: true })
+    }
   }
 
+  // ─── Render (player + bullets + collision each frame) ─────────────────────
+
   protected render(): void {
+    const W = this.canvas.width
     this.clearCanvas(BG)
 
+    // Fleet
     for (const alien of this.aliens) {
       if (!alien.alive) continue
       const sprites = SPRITES[alien.type]
       const sprite  = sprites[this.animFrame]
-      const ox = this.centerX(sprite[0].length)
-      const oy = this.centerY(sprite.length)
-      const x  = this.fleetX + alien.col * this.cellW + ox
-      const y  = this.fleetY + alien.row * this.cellH + oy
+      const x = this.fleetX + alien.col * this.cellW + this.centerX(sprite[0].length)
+      const y = this.fleetY + alien.row * this.cellH + this.centerY(sprite.length)
       this.drawSprite(sprite, x, y, COLORS[alien.type])
     }
 
-    // Player ship
-    const shipY = this.canvas.height - this.playerH - 20
-    this.fillRect(this.playerX, shipY, this.playerW, this.playerH, PLAYER_COLOR)
-    // Cockpit
-    const cw = this.pixSize * 3
-    const ch = this.pixSize * 2
-    this.fillRect(this.playerX + Math.floor((this.playerW - cw) / 2), shipY - ch, cw, ch, PLAYER_COLOR)
+    // Player — flash on hit
+    if (this.hitFlash === 0 || Math.floor(this.hitFlash / 4) % 2 === 0) {
+      this.drawSprite(PLAYER_SPRITE, this.playerX, this.shipY, PLAYER_COLOR)
+    }
+    if (this.hitFlash > 0) this.hitFlash--
+
+    // Player movement (smooth, per render frame)
+    if (this.moveLeft)  this.playerX = Math.max(MARGIN_X, this.playerX - PLAYER_SPEED)
+    if (this.moveRight) this.playerX = Math.min(W - this.playerW - MARGIN_X, this.playerX + PLAYER_SPEED)
+
+    // Player bullet
+    if (this.playerBullet.active) {
+      this.playerBullet.y -= BULLET_SPEED
+      if (this.playerBullet.y < 0) {
+        this.playerBullet.active = false
+      } else {
+        this.fillRect(this.playerBullet.x - 1, this.playerBullet.y, 2, this.pixSize * 2, BULLET_COLOR)
+        // Collision with aliens
+        for (const alien of this.aliens) {
+          if (!alien.alive) continue
+          const sprite = SPRITES[alien.type][this.animFrame]
+          const ax = this.fleetX + alien.col * this.cellW + this.centerX(sprite[0].length)
+          const ay = this.fleetY + alien.row * this.cellH + this.centerY(sprite.length)
+          const aw = sprite[0].length * this.pixSize
+          const ah = sprite.length    * this.pixSize
+          if (
+            this.playerBullet.x >= ax && this.playerBullet.x <= ax + aw &&
+            this.playerBullet.y >= ay && this.playerBullet.y <= ay + ah
+          ) {
+            alien.alive = false
+            this.playerBullet.active = false
+            this.score += POINTS[alien.type]
+            playSound('eat', this.isMuted())
+            break
+          }
+        }
+      }
+    }
+
+    // Alien bullets
+    for (const b of this.alienBullets) {
+      if (!b.active) continue
+      b.y += BULLET_SPEED
+      if (b.y > this.canvas.height) {
+        b.active = false
+        continue
+      }
+      this.fillRect(b.x - 1, b.y, 2, this.pixSize * 2, ALIEN_BULLET)
+
+      // Collision with player (skip while flashing)
+      if (this.hitFlash === 0) {
+        if (
+          b.x >= this.playerX && b.x <= this.playerX + this.playerW &&
+          b.y >= this.shipY   && b.y <= this.shipY + this.playerH
+        ) {
+          b.active = false
+          this.lives--
+          this.hitFlash = 60
+          playSound('die', this.isMuted())
+          if (this.lives <= 0) {
+            this.exit(this.score, 0)
+            return
+          }
+        }
+      }
+    }
+
+    // Lives HUD
+    const livesLabel = `LIVES  ${this.lives}   SCORE  ${this.score}`
+    this.drawText(livesLabel, 8, 16, { size: 8, color: '#45d4b0' })
+  }
+
+  protected restart(): void {
+    this.score       = 0
+    this.lives       = 3
+    this.dir         = 1
+    this.fleetX      = 0
+    this.fleetY      = Math.floor(this.canvas.height * 0.10)
+    this.animFrame   = 0
+    this.hitFlash    = 0
+    this.moveLeft    = false
+    this.moveRight   = false
+    this.playerBullet = { x: 0, y: 0, active: false }
+    this.alienBullets = []
+    this.playerX     = Math.floor(this.canvas.width / 2 - this.playerW / 2)
+    this.initAliens()
   }
 }
 

@@ -247,7 +247,7 @@ export abstract class GameEngine {
       case 'a': case 'A': this.onKeyA(); return
       case 's': case 'S': this.onKeyS(); return
       case 'd': case 'D': this.onKeyD(); return
-      case ' ':     this.onSpace(); return
+      case ' ':     e.preventDefault(); this.onSpace(); return
       case 'Enter': this.onEnter(); return
     }
     this.onKeyDown(e)

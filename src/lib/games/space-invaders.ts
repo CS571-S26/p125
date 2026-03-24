@@ -178,10 +178,14 @@ class SpaceInvadersGame extends GameEngine {
     const H = this.canvas.height
 
     this.pixSize = Math.max(2, Math.floor((W * 0.82) / (GRID_COLS * 14)))
-    this.cellW   = Math.floor(W / GRID_COLS)
-    this.cellH   = Math.floor((H * 0.48) / GRID_ROWS)
 
-    this.fleetX  = 0
+    // Fleet occupies ~65% of usable width so it has room to march left/right
+    const usableW  = W - 2 * MARGIN_X
+    this.cellW     = Math.floor((usableW * 0.65) / GRID_COLS)
+    this.cellH     = Math.floor((H * 0.48) / GRID_ROWS)
+
+    // Center fleet horizontally
+    this.fleetX  = MARGIN_X + Math.floor((usableW - GRID_COLS * this.cellW) / 2)
     this.fleetY  = Math.floor(H * 0.10)
     this.playerX = Math.floor(W / 2 - this.playerW / 2)
   }
@@ -376,7 +380,7 @@ class SpaceInvadersGame extends GameEngine {
     this.score       = 0
     this.lives       = 3
     this.dir         = 1
-    this.fleetX      = 0
+    this.fleetX      = MARGIN_X + Math.floor(((this.canvas.width - 2 * MARGIN_X) - GRID_COLS * this.cellW) / 2)
     this.fleetY      = Math.floor(this.canvas.height * 0.10)
     this.animFrame   = 0
     this.hitFlash    = 0

@@ -3,7 +3,11 @@ import type { CommandDef } from '@/types/terminal'
 import { Muted, Dim, HelpRow } from '@/components/terminal/rich'
 
 const GAME_LIST: { id: GameId; description: string }[] = [
-  { id: 'snake', description: 'Classic snake' },
+  { id: 'snake',          description: 'Classic snake' },
+  { id: 'space-invaders', description: 'Defend Earth from the alien fleet' },
+  { id: 'pacman',         description: 'Eat dots, dodge ghosts' },
+  { id: 'donkey-kong',    description: 'Climb to rescue Pauline' },
+  { id: 'mario',          description: 'Side-scrolling platformer' },
 ]
 
 export function makeGamesCommand(launchGame: (id: GameId) => void): CommandDef {

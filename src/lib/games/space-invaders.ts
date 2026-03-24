@@ -13,6 +13,7 @@ type AlienType = 'squid' | 'crab' | 'octopus'
 const ROW_TYPES: AlienType[] = ['squid', 'crab', 'crab', 'octopus', 'octopus']
 
 const POINTS: Record<AlienType, number> = { squid: 30, crab: 20, octopus: 10 }
+const UFO_POINTS = [50, 100, 150, 200, 300]
 
 const COLORS: Record<AlienType, string> = {
   squid:   '#ffffff',
@@ -24,14 +25,33 @@ const BG           = '#0d1117'
 const PLAYER_COLOR = '#7eecd4'
 const BULLET_COLOR = '#7eecd4'
 const ALIEN_BULLET = '#f04040'
+const SHIELD_COLOR = '#3dba96'
+const UFO_COLOR    = '#ff6b6b'
 
 const STEP_X          = 6
 const DROP_Y          = 14
 const MARGIN_X        = 16
-const PLAYER_SPEED    = 4   // px per render frame
+const PLAYER_SPEED    = 4     // px per render frame
 const MAX_ALIEN_SHOTS = 3
-const ALIEN_FIRE_RATE = 0.015  // chance per tick per alive alien (capped)
-const BULLET_SPEED    = 5   // px per render frame
+const ALIEN_FIRE_RATE = 0.015 // chance per tick per alive alien
+const BULLET_SPEED    = 5     // px per render frame
+const BASE_TICK_MS    = 400
+const MIN_TICK_MS     = 80
+const TICK_SPEEDUP    = 40    // ms removed per wave
+
+// Shield shape: 6 cols × 4 rows, notch cut from bottom-center
+const SHIELD_COLS = 6
+const SHIELD_PATTERN: readonly boolean[][] = [
+  [true,  true,  true,  true,  true,  true ],
+  [true,  true,  true,  true,  true,  true ],
+  [true,  true,  true,  true,  true,  true ],
+  [true,  true,  false, false, true,  true ],
+]
+
+// UFO
+const UFO_SPEED     = 2    // px per render frame
+const UFO_TICK_MIN  = 50   // ticks before first/next spawn
+const UFO_TICK_MAX  = 100
 
 // ─── Pixel-art sprites ────────────────────────────────────────────────────────
 
@@ -110,6 +130,13 @@ const PLAYER_SPRITE: Sprite = [
   'XXXXXXXXX',
 ]
 
+// UFO saucer — 3 rows × 10 cols
+const UFO_SPRITE: Sprite = [
+  '.XXXXXXXX.',
+  'XXXXXXXXXX',
+  '.XX.XX.XX.',
+]
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Alien {
@@ -125,16 +152,23 @@ interface Bullet {
   active: boolean
 }
 
+interface ShieldBlock {
+  x:     number
+  y:     number
+  alive: boolean
+}
+
 // ─── Game ─────────────────────────────────────────────────────────────────────
 
 class SpaceInvadersGame extends GameEngine {
-  protected tickMs = 400
+  protected tickMs = BASE_TICK_MS
 
   private aliens:    Alien[]  = []
   private dir        = 1
   private fleetX     = 0
   private fleetY     = 0
   private animFrame: 0 | 1 = 0
+  private wave       = 1
 
   private pixSize = 3
   private cellW   = 0
@@ -145,11 +179,20 @@ class SpaceInvadersGame extends GameEngine {
   private moveLeft   = false
   private moveRight  = false
   private lives      = 3
-  private hitFlash   = 0   // countdown frames after player hit
+  private hitFlash   = 0
 
   // Bullets
-  private playerBullet: Bullet = { x: 0, y: 0, active: false }
+  private playerBullet: Bullet   = { x: 0, y: 0, active: false }
   private alienBullets: Bullet[] = []
+
+  // Shields
+  private shields: ShieldBlock[] = []
+  private shieldBlockSize = 4
+
+  // UFO
+  private ufoX         = 0
+  private ufoActive    = false
+  private ufoTicksLeft = 0
 
   private score = 0
 
@@ -162,6 +205,8 @@ class SpaceInvadersGame extends GameEngine {
     this.gameTitle = 'SPACE INVADERS'
     this.initSizes()
     this.initAliens()
+    this.initShields()
+    this.ufoTicksLeft = this.randomUfoDelay()
   }
 
   // ─── Sizing ───────────────────────────────────────────────────────────────
@@ -169,6 +214,8 @@ class SpaceInvadersGame extends GameEngine {
   private get playerW() { return PLAYER_SPRITE[0].length * this.pixSize }
   private get playerH() { return PLAYER_SPRITE.length * this.pixSize }
   private get shipY()   { return this.canvas.height - this.playerH - 20 }
+  private get ufoW()    { return UFO_SPRITE[0].length * this.pixSize }
+  private get ufoH()    { return UFO_SPRITE.length * this.pixSize }
 
   private initSizes(): void {
     const domRect = this.canvas.getBoundingClientRect()
@@ -178,6 +225,7 @@ class SpaceInvadersGame extends GameEngine {
     const H = this.canvas.height
 
     this.pixSize = Math.max(2, Math.floor((W * 0.82) / (GRID_COLS * 14)))
+    this.shieldBlockSize = this.pixSize * 2
 
     // Fleet occupies ~65% of usable width so it has room to march left/right
     const usableW  = W - 2 * MARGIN_X
@@ -197,6 +245,35 @@ class SpaceInvadersGame extends GameEngine {
         this.aliens.push({ col, row, type: ROW_TYPES[row], alive: true })
       }
     }
+  }
+
+  private initShields(): void {
+    this.shields = []
+    const W    = this.canvas.width
+    const bs   = this.shieldBlockSize
+    const sw   = SHIELD_COLS * bs
+    const sh   = SHIELD_PATTERN.length * bs
+    const shieldY = this.shipY - sh - this.pixSize * 6
+
+    // 4 shields evenly spaced at 15 / 35 / 55 / 75% of canvas width
+    const positions = [0.15, 0.35, 0.55, 0.75]
+    for (const cx of positions) {
+      const originX = Math.floor(W * cx - sw / 2)
+      for (let row = 0; row < SHIELD_PATTERN.length; row++) {
+        for (let col = 0; col < SHIELD_COLS; col++) {
+          if (!SHIELD_PATTERN[row][col]) continue
+          this.shields.push({
+            x:     originX + col * bs,
+            y:     shieldY + row * bs,
+            alive: true,
+          })
+        }
+      }
+    }
+  }
+
+  private randomUfoDelay(): number {
+    return UFO_TICK_MIN + Math.floor(Math.random() * (UFO_TICK_MAX - UFO_TICK_MIN))
   }
 
   // ─── Drawing helpers ──────────────────────────────────────────────────────
@@ -243,20 +320,21 @@ class SpaceInvadersGame extends GameEngine {
     }
   }
 
-  // ─── Tick (fleet + alien fire) ────────────────────────────────────────────
+  // ─── Tick ─────────────────────────────────────────────────────────────────
 
   protected tick(): void {
     this.animFrame = this.animFrame === 0 ? 1 : 0
 
     const alive = this.aliens.filter(a => a.alive)
     if (!alive.length) {
-      this.exit(this.score, 0)
+      this.nextWave()
       return
     }
 
     // Fleet movement
     const minCol    = Math.min(...alive.map(a => a.col))
     const maxCol    = Math.max(...alive.map(a => a.col))
+    const maxRow    = Math.max(...alive.map(a => a.row))
     const leftEdge  = this.fleetX + minCol * this.cellW
     const rightEdge = this.fleetX + (maxCol + 1) * this.cellW
 
@@ -270,10 +348,22 @@ class SpaceInvadersGame extends GameEngine {
       this.fleetX += this.dir * STEP_X
     }
 
-    // Alien fires a bullet (randomly, up to MAX_ALIEN_SHOTS in flight)
+    // Lose: alien fleet reached player
+    if (this.fleetY + (maxRow + 1) * this.cellH >= this.shipY) {
+      this.exit(this.score, 0)
+      return
+    }
+
+    // UFO spawn countdown
+    this.ufoTicksLeft--
+    if (this.ufoTicksLeft <= 0 && !this.ufoActive) {
+      this.ufoActive = true
+      this.ufoX = -this.ufoW
+    }
+
+    // Alien fires a bullet
     const activeAlienShots = this.alienBullets.filter(b => b.active).length
     if (activeAlienShots < MAX_ALIEN_SHOTS && Math.random() < ALIEN_FIRE_RATE * alive.length) {
-      // Pick a random alien from the bottom-most alive in each column
       const colMap = new Map<number, Alien>()
       for (const a of alive) {
         const prev = colMap.get(a.col)
@@ -288,11 +378,46 @@ class SpaceInvadersGame extends GameEngine {
     }
   }
 
-  // ─── Render (player + bullets + collision each frame) ─────────────────────
+  // ─── Wave clear ───────────────────────────────────────────────────────────
+
+  private nextWave(): void {
+    this.wave++
+    this.tickMs = Math.max(MIN_TICK_MS, this.tickMs - TICK_SPEEDUP)
+    const usableW = this.canvas.width - 2 * MARGIN_X
+    this.fleetX   = MARGIN_X + Math.floor((usableW - GRID_COLS * this.cellW) / 2)
+    this.fleetY   = Math.floor(this.canvas.height * 0.10)
+    this.dir      = 1
+    this.animFrame = 0
+    this.playerBullet = { x: 0, y: 0, active: false }
+    this.alienBullets = []
+    this.ufoActive    = false
+    this.ufoTicksLeft = this.randomUfoDelay()
+    this.initAliens()
+    this.initShields()
+  }
+
+  // ─── Render ───────────────────────────────────────────────────────────────
 
   protected render(): void {
     const W = this.canvas.width
     this.clearCanvas(BG)
+
+    // UFO
+    if (this.ufoActive) {
+      this.ufoX += UFO_SPEED
+      if (this.ufoX > W + this.ufoW) {
+        this.ufoActive    = false
+        this.ufoTicksLeft = this.randomUfoDelay()
+      } else {
+        this.drawSprite(UFO_SPRITE, this.ufoX, 28, UFO_COLOR)
+      }
+    }
+
+    // Shields
+    const bs = this.shieldBlockSize
+    for (const block of this.shields) {
+      if (block.alive) this.fillRect(block.x, block.y, bs, bs, SHIELD_COLOR)
+    }
 
     // Fleet
     for (const alien of this.aliens) {
@@ -310,7 +435,7 @@ class SpaceInvadersGame extends GameEngine {
     }
     if (this.hitFlash > 0) this.hitFlash--
 
-    // Player movement (smooth, per render frame)
+    // Player movement
     if (this.moveLeft)  this.playerX = Math.max(MARGIN_X, this.playerX - PLAYER_SPEED)
     if (this.moveRight) this.playerX = Math.min(W - this.playerW - MARGIN_X, this.playerX + PLAYER_SPEED)
 
@@ -321,23 +446,55 @@ class SpaceInvadersGame extends GameEngine {
         this.playerBullet.active = false
       } else {
         this.fillRect(this.playerBullet.x - 1, this.playerBullet.y, 2, this.pixSize * 2, BULLET_COLOR)
-        // Collision with aliens
-        for (const alien of this.aliens) {
-          if (!alien.alive) continue
-          const sprite = SPRITES[alien.type][this.animFrame]
-          const ax = this.fleetX + alien.col * this.cellW + this.centerX(sprite[0].length)
-          const ay = this.fleetY + alien.row * this.cellH + this.centerY(sprite.length)
-          const aw = sprite[0].length * this.pixSize
-          const ah = sprite.length    * this.pixSize
+
+        // vs UFO
+        if (this.ufoActive) {
           if (
-            this.playerBullet.x >= ax && this.playerBullet.x <= ax + aw &&
-            this.playerBullet.y >= ay && this.playerBullet.y <= ay + ah
+            this.playerBullet.x >= this.ufoX && this.playerBullet.x <= this.ufoX + this.ufoW &&
+            this.playerBullet.y >= 28 && this.playerBullet.y <= 28 + this.ufoH
           ) {
-            alien.alive = false
+            this.ufoActive    = false
+            this.ufoTicksLeft = this.randomUfoDelay()
             this.playerBullet.active = false
-            this.score += POINTS[alien.type]
+            this.score += UFO_POINTS[Math.floor(Math.random() * UFO_POINTS.length)]
             playSound('eat', this.isMuted())
-            break
+          }
+        }
+
+        // vs shields
+        if (this.playerBullet.active) {
+          for (const block of this.shields) {
+            if (!block.alive) continue
+            if (
+              this.playerBullet.x >= block.x && this.playerBullet.x <= block.x + bs &&
+              this.playerBullet.y >= block.y && this.playerBullet.y <= block.y + bs
+            ) {
+              block.alive = false
+              this.playerBullet.active = false
+              break
+            }
+          }
+        }
+
+        // vs aliens
+        if (this.playerBullet.active) {
+          for (const alien of this.aliens) {
+            if (!alien.alive) continue
+            const sprite = SPRITES[alien.type][this.animFrame]
+            const ax = this.fleetX + alien.col * this.cellW + this.centerX(sprite[0].length)
+            const ay = this.fleetY + alien.row * this.cellH + this.centerY(sprite.length)
+            const aw = sprite[0].length * this.pixSize
+            const ah = sprite.length    * this.pixSize
+            if (
+              this.playerBullet.x >= ax && this.playerBullet.x <= ax + aw &&
+              this.playerBullet.y >= ay && this.playerBullet.y <= ay + ah
+            ) {
+              alien.alive = false
+              this.playerBullet.active = false
+              this.score += POINTS[alien.type]
+              playSound('eat', this.isMuted())
+              break
+            }
           }
         }
       }
@@ -353,7 +510,23 @@ class SpaceInvadersGame extends GameEngine {
       }
       this.fillRect(b.x - 1, b.y, 2, this.pixSize * 2, ALIEN_BULLET)
 
-      // Collision with player (skip while flashing)
+      // vs shields
+      let hitShield = false
+      for (const block of this.shields) {
+        if (!block.alive) continue
+        if (
+          b.x >= block.x && b.x <= block.x + bs &&
+          b.y >= block.y && b.y <= block.y + bs
+        ) {
+          block.alive = false
+          b.active    = false
+          hitShield   = true
+          break
+        }
+      }
+      if (hitShield) continue
+
+      // vs player
       if (this.hitFlash === 0) {
         if (
           b.x >= this.playerX && b.x <= this.playerX + this.playerW &&
@@ -371,25 +544,30 @@ class SpaceInvadersGame extends GameEngine {
       }
     }
 
-    // Lives HUD
-    const livesLabel = `LIVES  ${this.lives}   SCORE  ${this.score}`
-    this.drawText(livesLabel, 8, 16, { size: 8, color: '#45d4b0' })
+    // HUD
+    const waveLabel = `WAVE  ${this.wave}   LIVES  ${this.lives}   SCORE  ${this.score}`
+    this.drawText(waveLabel, 8, 16, { size: 8, color: '#45d4b0' })
   }
 
   protected restart(): void {
-    this.score       = 0
-    this.lives       = 3
-    this.dir         = 1
-    this.fleetX      = MARGIN_X + Math.floor(((this.canvas.width - 2 * MARGIN_X) - GRID_COLS * this.cellW) / 2)
-    this.fleetY      = Math.floor(this.canvas.height * 0.10)
-    this.animFrame   = 0
-    this.hitFlash    = 0
-    this.moveLeft    = false
-    this.moveRight   = false
+    this.score        = 0
+    this.lives        = 3
+    this.wave         = 1
+    this.tickMs       = BASE_TICK_MS
+    this.dir          = 1
+    this.fleetX       = MARGIN_X + Math.floor(((this.canvas.width - 2 * MARGIN_X) - GRID_COLS * this.cellW) / 2)
+    this.fleetY       = Math.floor(this.canvas.height * 0.10)
+    this.animFrame    = 0
+    this.hitFlash     = 0
+    this.moveLeft     = false
+    this.moveRight    = false
     this.playerBullet = { x: 0, y: 0, active: false }
     this.alienBullets = []
-    this.playerX     = Math.floor(this.canvas.width / 2 - this.playerW / 2)
+    this.ufoActive    = false
+    this.ufoTicksLeft = this.randomUfoDelay()
+    this.playerX      = Math.floor(this.canvas.width / 2 - this.playerW / 2)
     this.initAliens()
+    this.initShields()
   }
 }
 

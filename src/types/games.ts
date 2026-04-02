@@ -1,4 +1,4 @@
-export type GameId = 'snake' | 'space-invaders' | 'pacman' | 'donkey-kong' | 'mario'
+export type GameId = 'snake' | 'space-invaders'
 
 export interface GameControls {
   cleanup: () => void

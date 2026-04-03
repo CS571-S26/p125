@@ -1,4 +1,4 @@
-import type { CommandResult, TerminalState } from '@/types/terminal'
+import type { CommandResult } from '@/types/terminal'
 
 import { out, err } from './helpers'
 
@@ -24,16 +24,6 @@ export function handleExperience(): CommandResult {
 
 export function handleProjects(): CommandResult {
   return out('Projects coming soon!')
-}
-
-export function handleContact(_args: string[], state: TerminalState): CommandResult {
-  if (state.contactFlow) {
-    return err('A contact session is already in progress. Press Ctrl+C to cancel.')
-  }
-  return {
-    lines: [{ type: 'output' as const, content: "What's your name?" }],
-    nextState: { contactFlow: { step: 'name', data: {} } },
-  }
 }
 
 export function handleSudo(): CommandResult {

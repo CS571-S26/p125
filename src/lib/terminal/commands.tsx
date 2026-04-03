@@ -19,7 +19,6 @@ import {
 } from './async-commands'
 import {
   handleClear,
-  handleContact,
   handleDate,
   handleExit,
   handleExperience,
@@ -157,18 +156,6 @@ export const COMMANDS: Record<string, CommandDef> = {
     description: 'Browse my projects',
     type: 'sync',
     handler: handleProjects,
-    hiddenFromHelp: false,
-  },
-
-  // ── Contact ───────────────────────────────────────────────────────────────
-  contact: {
-    description: 'Send me a message',
-    details: [
-      'Starts an interactive contact flow — name, email, and message.',
-      'Press Ctrl+C at any time to cancel.',
-    ],
-    type: 'sync',
-    handler: handleContact,
     hiddenFromHelp: false,
   },
 

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { COMMANDS } from '@/lib/terminal/commands'
-import type { CommandResult, ContactFlow, TerminalLine, TerminalState } from '@/types/terminal'
+import type { CommandResult, TerminalLine, TerminalState } from '@/types/terminal'
 
 function makeId(): string {
   return Math.random().toString(36).slice(2, 10)
@@ -29,7 +29,6 @@ const INITIAL_STATE: TerminalState = {
   history: [],
   historyIndex: -1,
   isLoading: false,
-  contactFlow: null,
 }
 
 export function useTerminal() {
@@ -48,104 +47,6 @@ export function useTerminal() {
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setState(prev => ({ ...prev, input: e.target.value }))
-  }, [])
-
-  // ─── Contact flow ─────────────────────────────────────────────────────────
-
-  const advanceContactFlow = useCallback(async (flow: ContactFlow, trimmed: string) => {
-    if (flow.step === 'name') {
-      if (!trimmed) {
-        setState(prev => ({
-          ...prev,
-          lines: [...prev.lines, makeLine('error', 'Name cannot be empty.')],
-        }))
-        return
-      }
-      setState(prev => ({
-        ...prev,
-        lines: [...prev.lines, makeLine('output', 'Enter your email:')],
-        contactFlow: { step: 'email', data: { name: trimmed } },
-      }))
-      return
-    }
-
-    if (flow.step === 'email') {
-      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)
-      if (!valid) {
-        setState(prev => ({
-          ...prev,
-          lines: [...prev.lines, makeLine('error', 'Please enter a valid email address.')],
-        }))
-        return
-      }
-      setState(prev => ({
-        ...prev,
-        lines: [...prev.lines, makeLine('output', 'Enter your message:')],
-        contactFlow: { step: 'message', data: { ...flow.data, email: trimmed } },
-      }))
-      return
-    }
-
-    if (flow.step === 'message') {
-      if (!trimmed) {
-        setState(prev => ({
-          ...prev,
-          lines: [...prev.lines, makeLine('error', 'Message cannot be empty.')],
-        }))
-        return
-      }
-      const { name, email } = flow.data
-      setState(prev => ({
-        ...prev,
-        lines: [
-          ...prev.lines,
-          makeLine('output', `Name:    ${name}`),
-          makeLine('output', `Email:   ${email}`),
-          makeLine('output', `Message: ${trimmed}`),
-          makeLine('output', 'Send? (yes/no)'),
-        ],
-        contactFlow: { step: 'confirm', data: { ...flow.data, message: trimmed } },
-      }))
-      return
-    }
-
-    if (flow.step === 'confirm') {
-      if (trimmed === 'yes') {
-        setState(prev => ({ ...prev, isLoading: true }))
-        try {
-          const res = await fetch('/api/terminal/contact', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(flow.data),
-          })
-          const successLine = res.ok
-            ? makeLine('output', "Message sent! I'll get back to you soon.")
-            : makeLine('error', 'Failed to send. Try emailing me at zvishrut@gmail.com.')
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            contactFlow: null,
-            lines: [...prev.lines, successLine],
-          }))
-        } catch {
-          setState(prev => ({
-            ...prev,
-            isLoading: false,
-            contactFlow: null,
-            lines: [
-              ...prev.lines,
-              makeLine('error', 'Network error. Try emailing me at zvishrut@gmail.com.'),
-            ],
-          }))
-        }
-      } else {
-        setState(prev => ({
-          ...prev,
-          contactFlow: null,
-          lines: [...prev.lines, makeLine('output', 'Cancelled.')],
-        }))
-      }
-    }
   }, [])
 
   // ─── Command dispatch ─────────────────────────────────────────────────────
@@ -216,16 +117,15 @@ export function useTerminal() {
 
   const handleKeyDown = useCallback(
     async (e: React.KeyboardEvent<HTMLInputElement>) => {
-      const { input, history, historyIndex, contactFlow, isLoading } = stateRef.current
+      const { input, history, historyIndex, isLoading } = stateRef.current
       if (isLoading) return
 
-      // Ctrl+C — cancel contact flow
+      // Ctrl+C — cancel
       if (e.ctrlKey && e.key === 'c') {
         e.preventDefault()
         setState(prev => ({
           ...prev,
           input: '',
-          contactFlow: null,
           lines: [...prev.lines, makeLine('system', '^C')],
         }))
         return
@@ -287,14 +187,10 @@ export function useTerminal() {
 
         if (!trimmed) return
 
-        if (contactFlow) {
-          await advanceContactFlow(contactFlow, trimmed)
-        } else {
-          await runCommand(trimmed)
-        }
+        await runCommand(trimmed)
       }
     },
-    [advanceContactFlow, runCommand],
+    [runCommand],
   )
 
   const appendLine = useCallback(

@@ -8,20 +8,12 @@ export interface TerminalLine {
   content: ReactNode
 }
 
-export type ContactStep = 'name' | 'email' | 'message' | 'confirm'
-
-export interface ContactFlow {
-  step: ContactStep
-  data: Partial<{ name: string; email: string; message: string }>
-}
-
 export interface TerminalState {
   lines: TerminalLine[]
   input: string
   history: string[]
   historyIndex: number
   isLoading: boolean
-  contactFlow: ContactFlow | null
 }
 
 export interface CommandResult {

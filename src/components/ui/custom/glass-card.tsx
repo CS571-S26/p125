@@ -82,6 +82,10 @@ interface GlassCardProps {
   onClick?: () => void
   /** Shared-layout ID for Framer Motion expand animations */
   layoutId?: string
+  /** Forwarded to the root motion.div — useful for useOutsideClick */
+  ref?: React.Ref<HTMLDivElement>
+  /** Replaces the glass/blob aesthetic with a solid bg-background surface */
+  solid?: boolean
 }
 
 export function GlassCard({
@@ -91,6 +95,8 @@ export function GlassCard({
   children,
   onClick,
   layoutId,
+  ref,
+  solid = false,
 }: GlassCardProps) {
   const blobPositions = useMemo<React.CSSProperties[]>(() => {
     const s = seed.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
@@ -103,25 +109,32 @@ export function GlassCard({
 
   return (
     <motion.div
+      ref={ref}
       layout
       layoutId={layoutId}
       onClick={onClick}
       transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
       className={cn(
-        'group relative overflow-hidden rounded-xl border border-muted-foreground/10 hover:border-muted-foreground/20 backdrop-blur-md shadow-sm transition-colors duration-300',
+        'group relative overflow-hidden rounded-xl border border-muted-foreground/10 shadow-sm transition-colors duration-300',
+        solid
+          ? 'bg-background hover:border-muted-foreground/20'
+          : 'backdrop-blur-md hover:border-muted-foreground/20',
         onClick && 'cursor-pointer',
         className,
       )}
     >
-      {colors.map((color, i) => (
+      {!solid && colors.map((color, i) => (
         <Blob key={color} color={color} position={blobPositions[i]} />
       ))}
 
-      {/* Background tint */}
-      <div className="absolute inset-0 bg-muted-foreground/2 group-hover:bg-muted-foreground/3 transition-colors duration-300 pointer-events-none" />
-
-      {/* Glass sheen */}
-      <div className="absolute inset-0 bg-linear-to-br from-muted-foreground/5 to-transparent pointer-events-none" />
+      {!solid && (
+        <>
+          {/* Background tint */}
+          <div className="absolute inset-0 bg-muted-foreground/2 group-hover:bg-muted-foreground/3 transition-colors duration-300 pointer-events-none" />
+          {/* Glass sheen */}
+          <div className="absolute inset-0 bg-linear-to-br from-muted-foreground/5 to-transparent pointer-events-none" />
+        </>
+      )}
 
       <div className="relative z-10 pb-1">{children}</div>
     </motion.div>

@@ -230,7 +230,7 @@ export const COMMANDS: Record<string, CommandDef> = {
     usage: '<ticker>',
     details: [
       'Fetches the current USD price and 24h change from the CoinGecko API.',
-      'Supported tickers: btc, eth, sol, doge, ada, xrp, bnb',
+      'Works with any crypto ticker — e.g. price btc, price pepe, price wif',
     ],
     type: 'async',
     handler: (args) => handlePrice(args),

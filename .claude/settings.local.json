@@ -3,7 +3,8 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(grep -r GamePanel /Users/vishrutagrawal/repos/personal-portfolio-v2/src --include=*.tsx --include=*.ts)"
     ]
   }
 }

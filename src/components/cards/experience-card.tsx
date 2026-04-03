@@ -1,12 +1,58 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import type React from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence } from 'motion/react'
-import { ChevronDown, MapPin, ExternalLink } from 'lucide-react'
+import { motion, AnimatePresence, useAnimate } from 'motion/react'
+import { ChevronDown, ExternalLink, MapPin } from 'lucide-react'
 
 import type { ExperienceFrontmatter } from '@/types/mdx'
-import { TechBadge } from '@/components/shared/tech-badge'
+
+function rand(min: number, max: number) {
+  return Math.random() * (max - min) + min
+}
+
+const blobCenters = [25, 50, 75]
+
+function Blob({ color, position }: { color: string; position: React.CSSProperties }) {
+  const [scope, animate] = useAnimate()
+
+  useEffect(() => {
+    let active = true
+
+    async function roam() {
+      // Start at a random position so blobs don't all launch from origin
+      await animate(scope.current, {
+        x: rand(-50, 50),
+        y: rand(-40, 40),
+        scale: rand(0.8, 1.3),
+      }, { duration: 0 })
+
+      while (active) {
+        await animate(scope.current, {
+          x: rand(-65, 65),
+          y: rand(-55, 55),
+          scale: rand(0.7, 1.45),
+        }, {
+          duration: rand(2.5, 5.5),
+          ease: 'easeInOut',
+        })
+      }
+    }
+
+    roam()
+    return () => { active = false }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  return (
+    <motion.div
+      ref={scope}
+      className="absolute h-44 w-44 rounded-full blur-3xl opacity-30 pointer-events-none"
+      style={{ backgroundColor: color, ...position }}
+    />
+  )
+}
 
 export function ExperienceCard({
   company,
@@ -16,9 +62,18 @@ export function ExperienceCard({
   location,
   website,
   summary,
-  tech,
+  colors,
 }: ExperienceFrontmatter) {
   const [isOpen, setIsOpen] = useState(false)
+
+  const blobPositions = useMemo<React.CSSProperties[]>(() =>
+    blobCenters.map(cx => ({
+      top: `${rand(10, 55)}%`,
+      left: `${rand(cx - 10, cx + 10)}%`,
+      transform: 'translate(-50%, -50%)',
+    }))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  , [])
 
   return (
     <motion.div
@@ -26,18 +81,16 @@ export function ExperienceCard({
       onClick={() => setIsOpen(prev => !prev)}
       whileHover={{ scale: 1.01 }}
       transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
-      className="group relative cursor-pointer overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10 hover:ring-foreground/25 transition-shadow hover:shadow-lg"
+      className="relative cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-sm hover:shadow-md hover:border-white/20 transition-[border-color,box-shadow]"
     >
-      {/* Animated left accent bar */}
-      <motion.div
-        className="absolute left-0 top-0 h-full w-[2px] bg-foreground/60 origin-top"
-        initial={{ scaleY: 0 }}
-        animate={{ scaleY: isOpen ? 1 : 0 }}
-        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      />
+      {colors.map((color, i) => (
+        <Blob key={color} color={color} position={blobPositions[i]} />
+      ))}
 
-      <div className="px-5 py-4">
-        {/* Header row */}
+      {/* Glass sheen */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+
+      <div className="relative z-10 px-5 py-4">
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-0.5">
             <span className="text-base font-medium leading-snug font-(family-name:--font-josefin-sans)">
@@ -60,7 +113,6 @@ export function ExperienceCard({
           </div>
         </div>
 
-        {/* Expandable content */}
         <AnimatePresence initial={false}>
           {isOpen && (
             <motion.div
@@ -76,17 +128,9 @@ export function ExperienceCard({
                   {summary}
                 </p>
 
-                {tech.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {tech.map(t => (
-                      <TechBadge key={t} tech={t} />
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center justify-between">
                   {location && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       {location}
                     </span>
@@ -97,7 +141,7 @@ export function ExperienceCard({
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={e => e.stopPropagation()}
-                      className="flex items-center gap-1 hover:text-foreground transition-colors"
+                      className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <ExternalLink className="h-3 w-3" />
                       Website

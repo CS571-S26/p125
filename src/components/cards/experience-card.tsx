@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type React from 'react'
 import Link from 'next/link'
-import { motion, AnimatePresence, useAnimate } from 'motion/react'
 import { ChevronDown, ExternalLink, MapPin } from 'lucide-react'
+import { AnimatePresence, motion, useAnimate } from 'motion/react'
 
 import type { ExperienceFrontmatter } from '@/types/mdx'
 
@@ -14,7 +14,13 @@ function rand(min: number, max: number) {
 
 const blobCenters = [25, 50, 75]
 
-function Blob({ color, position }: { color: string; position: React.CSSProperties }) {
+function Blob({
+  color,
+  position,
+}: {
+  color: string
+  position: React.CSSProperties
+}) {
   const [scope, animate] = useAnimate()
 
   useEffect(() => {
@@ -22,28 +28,37 @@ function Blob({ color, position }: { color: string; position: React.CSSPropertie
 
     async function roam() {
       // Start at a random position so blobs don't all launch from origin
-      await animate(scope.current, {
-        x: rand(-50, 50),
-        y: rand(-40, 40),
-        scale: rand(0.8, 1.3),
-      }, { duration: 0 })
+      await animate(
+        scope.current,
+        {
+          x: rand(-50, 50),
+          y: rand(-40, 40),
+          scale: rand(0.8, 1.3),
+        },
+        { duration: 0 },
+      )
 
       while (active) {
-        await animate(scope.current, {
-          x: rand(-65, 65),
-          y: rand(-55, 55),
-          scale: rand(0.7, 1.45),
-        }, {
-          duration: rand(2.5, 5.5),
-          ease: 'easeInOut',
-        })
+        await animate(
+          scope.current,
+          {
+            x: rand(-65, 65),
+            y: rand(-55, 55),
+            scale: rand(0.7, 1.45),
+          },
+          {
+            duration: rand(2.5, 5.5),
+            ease: 'easeInOut',
+          },
+        )
       }
     }
 
     roam()
-    return () => { active = false }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    return () => {
+      active = false
+    }
+  }, [animate, scope])
 
   return (
     <motion.div
@@ -66,29 +81,32 @@ export function ExperienceCard({
 }: ExperienceFrontmatter) {
   const [isOpen, setIsOpen] = useState(false)
 
-  const blobPositions = useMemo<React.CSSProperties[]>(() =>
-    blobCenters.map(cx => ({
-      top: `${rand(10, 55)}%`,
-      left: `${rand(cx - 10, cx + 10)}%`,
-      transform: 'translate(-50%, -50%)',
-    }))
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  , [])
+  const blobPositions = useMemo<React.CSSProperties[]>(
+    () =>
+      blobCenters.map((cx) => ({
+        top: `${rand(10, 55)}%`,
+        left: `${rand(cx - 10, cx + 10)}%`,
+        transform: 'translate(-50%, -50%)',
+      })),
+    [],
+  )
 
   return (
     <motion.div
       layout
-      onClick={() => setIsOpen(prev => !prev)}
-      whileHover={{ scale: 1.01 }}
+      onClick={() => setIsOpen((prev) => !prev)}
       transition={{ layout: { duration: 0.3, ease: [0.4, 0, 0.2, 1] } }}
-      className="relative cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-md shadow-sm hover:shadow-md hover:border-white/20 transition-[border-color,box-shadow]"
+      className="group relative cursor-pointer overflow-hidden rounded-xl border border-muted-foreground/10 hover:border-muted-foreground/20 backdrop-blur-md shadow-sm transition-colors duration-300"
     >
       {colors.map((color, i) => (
         <Blob key={color} color={color} position={blobPositions[i]} />
       ))}
 
+      {/* Background */}
+      <div className="absolute inset-0 bg-muted-foreground/2 group-hover:bg-muted-foreground/3 transition-colors duration-300 pointer-events-none" />
+
       {/* Glass sheen */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-0 bg-linear-to-br from-muted-foreground/5 to-transparent pointer-events-none" />
 
       <div className="relative z-10 px-5 py-4">
         <div className="flex items-start justify-between gap-4">
@@ -140,7 +158,7 @@ export function ExperienceCard({
                       href={website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={e => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
                       className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <ExternalLink className="h-3 w-3" />

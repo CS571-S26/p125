@@ -45,7 +45,9 @@ function TextLayer({
       <p className="text-xs text-muted-foreground tracking-widest font-(family-name:--font-jetbrains-mono) mb-2 uppercase">
         {config.subtitle}
       </p>
-      <h1 className="text-4xl tracking-tight font-(family-name:--font-josefin-sans)">{config.title}</h1>
+      <h1 className="text-4xl tracking-tight font-(family-name:--font-josefin-sans)">
+        {config.title}
+      </h1>
     </div>
   )
 }
@@ -79,15 +81,26 @@ export function PageHeader() {
   }, [pathname])
 
   return (
-    <div className="mt-8 pb-2 relative overflow-hidden">
-      {/* Spacer keeps the container at the right height */}
-      <div aria-hidden className="invisible pointer-events-none select-none">
-        <p className="text-xs mb-1">x</p>
-        <h1 className="text-2xl font-semibold tracking-tight">x</h1>
-      </div>
+    <div className="mt-8 pb-2">
+      {/* Animated subtitle + title */}
+      <div className="relative overflow-hidden">
+        {/* Spacer keeps the container at the right height */}
+        <div
+          aria-hidden
+          className="invisible pointer-events-none select-none px-8"
+        >
+          <p className="text-xs mb-2">x</p>
+          <h1 className="text-4xl tracking-tight font-(family-name:--font-josefin-sans)">
+            x
+          </h1>
+        </div>
 
-      {exiting && <TextLayer config={exiting} style={ANIM_OUT} />}
-      <TextLayer config={current} style={transitioning ? ANIM_IN : undefined} />
+        {exiting && <TextLayer config={exiting} style={ANIM_OUT} />}
+        <TextLayer
+          config={current}
+          style={transitioning ? ANIM_IN : undefined}
+        />
+      </div>
     </div>
   )
 }

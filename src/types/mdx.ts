@@ -24,6 +24,7 @@ export interface ProjectFrontmatter {
   githubUrl?: string
   liveUrl?: string
   tech: string[]
+  colors: string[]
   summary: string
   order: number
 }

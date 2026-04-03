@@ -7,6 +7,7 @@ export interface ExperienceFrontmatter {
   location: string
   website?: string
   tech: string[]
+  colors: string[]
   published: boolean
   summary: string
   order: number

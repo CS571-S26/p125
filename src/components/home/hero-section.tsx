@@ -8,17 +8,11 @@ import { LinkedIn } from '../ui/icons/linkedin'
 
 export function HeroSection() {
   return (
-    <section className="max-w-3xl mx-auto px-4">
-      <p className="text-xs text-muted-foreground tracking-widest font-(family-name:--font-jetbrains-mono) mb-3 uppercase">
-        Software Engineer
-      </p>
-      <h1 className="text-5xl tracking-tight mb-6 font-(family-name:--font-josefin-sans)">
-        Vishrut Agrawal
-      </h1>
-      <p className="text-muted-foreground leading-relaxed max-w-xl">
-        Hey, I'm a software engineer who enjoys taking early ideas and building
+    <section className="w-full px-6">
+      <p className="text-muted-foreground leading-relaxed">
+        Hey, I&apos;m a software engineer who enjoys taking early ideas and building
         them out into complete products. I prioritize getting the details right,
-        whether that's in cloud infrastructure, tweaking how a button looks, or
+        whether that&apos;s in cloud infrastructure, tweaking how a button looks, or
         the business logic that ties it all together.
       </p>
       <p className="text-muted-foreground leading-relaxed max-w-xl mt-3">

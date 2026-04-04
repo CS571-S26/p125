@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
+
+import { subscribe, getOverride } from '@/lib/page-header-store'
 
 type RouteConfig = {
   subtitle: string
@@ -54,23 +56,27 @@ function TextLayer({
 
 export function PageHeader() {
   const pathname = usePathname()
-  const [current, setCurrent] = useState(getRoute(pathname))
+  const override = useSyncExternalStore(subscribe, getOverride, () => null)
+
+  const effective = override ?? getRoute(pathname)
+
+  const [current, setCurrent] = useState(effective)
   const [exiting, setExiting] = useState<RouteConfig | null>(null)
   const [transitioning, setTransitioning] = useState(false)
-  const prevRef = useRef(pathname)
+  const prevConfigRef = useRef(effective)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (prevRef.current === pathname) return
-    const prev = prevRef.current
-    prevRef.current = pathname
+    const prev = prevConfigRef.current
+    const next = override ?? getRoute(pathname)
+
+    if (prev.subtitle === next.subtitle && prev.title === next.title) return
+
+    prevConfigRef.current = next
 
     if (timerRef.current) clearTimeout(timerRef.current)
 
-    const next = getRoute(pathname)
-    const previous = getRoute(prev)
-
-    setExiting(previous)
+    setExiting(prev)
     setCurrent(next)
     setTransitioning(true)
 
@@ -78,7 +84,7 @@ export function PageHeader() {
       setExiting(null)
       setTransitioning(false)
     }, ANIM_DURATION)
-  }, [pathname])
+  }, [pathname, override])
 
   return (
     <div className="mt-8 pb-2">

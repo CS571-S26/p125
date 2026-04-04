@@ -7,10 +7,21 @@ dateEnd: Nov 2024
 status: hackathon
 featured: false
 githubUrl: https://github.com/vishrutagrawal/shelfwise
-tech: [Next.js, FastAPI, Prisma, OpenAI, PostgreSQL, TypeScript, Python]
 colors: ['#10B981', '#34D399', '#6EE7B7']
 summary: Built at MadHacks Fall 2024 — a grocery management app that tracks expiry dates and suggests recipes based on what's about to go bad.
 order: 2
 ---
+
+Built in 24 hours at MadHacks Fall 2024. The core idea: stop throwing away food by knowing what's about to expire — and getting recipe suggestions for exactly those ingredients.
+
+## What it does
+
+You scan or manually log groceries, and Shelfwise tracks their expiry dates. As items approach expiry, the app surfaces them prominently and uses OpenAI to suggest recipes that use those specific items. It also sends reminders before things go bad.
+
+## Architecture
+
+A **Next.js** frontend talks to a **FastAPI** backend over REST. The backend handles expiry logic, pushes data through **Prisma** to a **PostgreSQL** database, and hits the **OpenAI API** for recipe generation with structured JSON output.
+
+The trickiest part was building reliable receipt parsing — we ended up using GPT-4 Vision to extract item names and quantities from photos, then normalizing them against a product database to get accurate shelf-life estimates.
 
 {/* TODO: CHANGE PLACEHOLDER CONTENT ABOVE */}

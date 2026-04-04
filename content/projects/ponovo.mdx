@@ -7,10 +7,21 @@ dateEnd: Present
 status: active
 featured: true
 liveUrl: https://ponovo.app
-tech: [Next.js, Drizzle, React Query, Clerk, PostgreSQL, TypeScript]
 colors: ['#6366F1', '#818CF8', '#A78BFA']
 summary: A clean, fast job application tracker built for the modern job search — status tracking, timeline views, and a no-friction UI.
 order: 1
 ---
+
+Built out of frustration with spreadsheets and bloated ATS tools during recruiting season. Ponovo is a focused job tracker that gets out of the way and lets you manage your pipeline with clarity.
+
+## What it does
+
+Track applications across every stage — from applied to offer — with a kanban-style board and a timeline view per company. Each application stores the job description, notes, contacts, and a full history of status changes.
+
+## Under the hood
+
+The stack centers on **Drizzle ORM** over a **Neon PostgreSQL** database, with **React Query** for optimistic updates that make the UI feel instant. Auth is handled by **Clerk**, which gave me SSO and session management without touching user infrastructure.
+
+The frontend uses the Next.js App Router with a deliberate RSC/client boundary split — data fetching on the server, mutations through Server Actions, client state only where necessary.
 
 {/* TODO: CHANGE PLACEHOLDER CONTENT ABOVE */}

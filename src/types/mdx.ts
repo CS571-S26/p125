@@ -6,7 +6,6 @@ export interface ExperienceFrontmatter {
   dateEnd: string
   location: string
   website?: string
-  tech: string[]
   colors: string[]
   published: boolean
   summary: string
@@ -23,7 +22,6 @@ export interface ProjectFrontmatter {
   featured: boolean
   githubUrl?: string
   liveUrl?: string
-  tech: string[]
   colors: string[]
   summary: string
   order: number

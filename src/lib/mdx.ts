@@ -18,8 +18,8 @@ type FrontmatterFor<T extends ContentType> = T extends 'experience'
 function parseFrontmatter<T extends ContentType>(type: T, slug: string): FrontmatterFor<T> {
   const filePath = path.join(CONTENT_ROOT, type, `${slug}.mdx`)
   const raw = fs.readFileSync(filePath, 'utf-8')
-  const { data } = matter(raw)
-  return { ...data, slug } as FrontmatterFor<T>
+  const { data, content } = matter(raw)
+  return { ...data, slug, content } as unknown as FrontmatterFor<T> & { content: string }
 }
 
 export function getAllContent<T extends ContentType>(type: T): FrontmatterFor<T>[] {

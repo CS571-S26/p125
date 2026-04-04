@@ -7,10 +7,23 @@ dateEnd: Present
 status: active
 featured: false
 liveUrl: https://vishrut.tech
-tech: [Next.js, TypeScript, Tailwind CSS, MDX, shadcn/ui]
 colors: ['#F59E0B', '#FBBF24', '#FCD34D']
 summary: A developer portfolio built around an interactive terminal — with real API commands, a playable snake game, and MDX-driven content pages.
 order: 3
 ---
+
+The site you're looking at right now. I wanted something that felt alive — not a static resume dump, but an actual product with personality.
+
+## The terminal
+
+The homepage centers on an interactive terminal that runs real commands: `ls`, `cat`, `whoami`, `open`, even `snake` (which launches a fully playable snake game). It fetches live data from my own API routes — blog posts, projects, and experience — all parsed from MDX content.
+
+## Content architecture
+
+Everything is MDX-driven. Experience, projects, and blog posts live in a `content/` directory as MDX files with frontmatter. A thin utility layer reads them at build time via gray-matter, sorts and filters based on frontmatter fields, and surfaces them through Server Components with zero client-side data fetching.
+
+## Design
+
+Glass-morphism cards with animated color blobs, a custom `GlassCard` component that wraps any content with the same animated aesthetic, and a dark-first theme built on shadcn/ui with Tailwind v4.
 
 {/* TODO: CHANGE PLACEHOLDER CONTENT ABOVE */}

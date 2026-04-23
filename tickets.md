@@ -412,16 +412,7 @@ Configure MDX support, then add content and content-driven pages.
 **Technical Notes:**
 - Update `mdx-components.tsx` at project root
 - Element mappings:
-  - `h1` — Geist Sans `text-3xl font-bold mt-8 mb-4`
-  - `h2` — Geist Sans `text-xl font-semibold mt-6 mb-3` with subtle left border accent
-  - `h3` — Geist Sans `text-lg font-medium mt-4 mb-2`
-  - `p` — Nunito Sans `text-base leading-7 mb-4`
-  - `code` (inline) — Geist Mono `text-sm bg-muted px-1.5 py-0.5 rounded`
-  - `pre` — `bg-muted rounded-lg overflow-x-auto p-4 my-4` (rehype-pretty-code provides syntax highlighting)
-  - `ul`/`ol` — `mb-4 pl-6` with `list-disc`/`list-decimal`
-  - `li` — `mb-1`
-  - `a` — `text-primary underline underline-offset-4 hover:text-primary/80`
-  - `blockquote` — `border-l-4 border-primary pl-4 italic text-muted-foreground`
+- For typography, use the following shadcn components: https://ui.shadcn.com/docs/components/radix/typography.md
 - Create `src/components/mdx/callout.tsx` — `<Callout type="info|warn|tip">` usable in MDX
 
 **Files to modify:**

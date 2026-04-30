@@ -48,13 +48,26 @@ const customComponents: MDXComponents = {
     <ol className="my-6 ml-6 list-decimal [&>li]:mt-2">{children}</ol>
   ),
   li: ({ children }) => <li className="leading-7">{children}</li>,
-  code: ({ children }) => (
-    <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
-      {children}
-    </code>
-  ),
-  pre: ({ children }) => (
-    <pre className="my-4 overflow-x-auto rounded-lg border border-border">
+  code: ({ className, children, ...rest }) => {
+    const isBlock = 'data-language' in rest
+    if (isBlock) {
+      return (
+        <code className={className} {...rest}>
+          {children}
+        </code>
+      )
+    }
+    return (
+      <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm">
+        {children}
+      </code>
+    )
+  },
+  pre: ({ children, ...rest }) => (
+    <pre
+      className="my-4 overflow-x-auto rounded-lg border border-border bg-card py-4 text-sm leading-relaxed"
+      {...rest}
+    >
       {children}
     </pre>
   ),

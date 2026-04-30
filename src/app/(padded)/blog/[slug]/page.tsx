@@ -5,6 +5,7 @@ import { getAllContent, getContentBySlug } from '@/lib/mdx'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { PageHeaderSetter } from '@/components/layout/page-header-setter'
+import { ReadingProgress } from '@/components/detail/reading-progress'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -49,6 +50,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <>
+      <ReadingProgress />
       <PageHeaderSetter subtitle={`03.${postNumber}`} title={post.title} />
 
       <main className="w-full max-w-2xl">

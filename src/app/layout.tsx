@@ -8,6 +8,7 @@ import {
 
 import './globals.css'
 
+import { siteMetadata } from '@/lib/metadata'
 import { cn } from '@/lib/utils'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { PageHeader } from '@/components/layout/page-header'
@@ -34,8 +35,17 @@ const pressStart2P = Press_Start_2P({
 })
 
 export const metadata: Metadata = {
-  title: { template: '%s | Vishrut Agrawal', default: 'Vishrut Agrawal' },
-  description: 'Software engineer and student at UW-Madison.',
+  metadataBase: new URL(siteMetadata.url),
+  title: { template: `%s | ${siteMetadata.title}`, default: siteMetadata.title },
+  description: siteMetadata.description,
+  authors: [{ name: siteMetadata.author }],
+  openGraph: {
+    title: siteMetadata.title,
+    description: siteMetadata.description,
+    url: siteMetadata.url,
+    siteName: siteMetadata.title,
+    type: 'website',
+  },
 }
 
 export default function RootLayout({

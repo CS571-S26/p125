@@ -21,6 +21,8 @@ export interface CommandResult {
   nextState?: Partial<TerminalState>
 }
 
+export type AppendLine = (type: TerminalLineType, content: TerminalLine['content']) => void
+
 export interface CommandDef {
   description: string
   /** One-line description shown in `help` listing. */
@@ -29,6 +31,12 @@ export interface CommandDef {
   details?: string[]
   aliases?: string[]
   type: 'sync' | 'async'
-  handler: (args: string[], state: TerminalState) => CommandResult | Promise<CommandResult>
+  /** Streaming async commands skip the loading placeholder and receive an `append` callback. */
+  stream?: boolean
+  handler: (
+    args: string[],
+    state: TerminalState,
+    append?: AppendLine,
+  ) => CommandResult | Promise<CommandResult>
   hiddenFromHelp: boolean
 }

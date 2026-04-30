@@ -28,6 +28,24 @@ function resolve(target: string): string | null {
   return null
 }
 
+export function makeRouteCommand(
+  router: AppRouterInstance,
+  path: string,
+  description: string,
+): CommandDef {
+  return {
+    description,
+    type: 'sync',
+    hiddenFromHelp: false,
+    handler: () => {
+      router.push(path)
+      return {
+        lines: [{ type: 'system' as const, content: `→ ${path}` }],
+      }
+    },
+  }
+}
+
 export function makeNavigateCommand(router: AppRouterInstance): CommandDef {
   return {
     description: 'Navigate to a route',

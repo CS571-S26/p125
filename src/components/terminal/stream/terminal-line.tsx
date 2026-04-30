@@ -17,17 +17,17 @@ export function TerminalLine({ line }: TerminalLineProps) {
 
   if (line.type === 'error') {
     return (
-      <div className="text-sm leading-5 text-destructive">{line.content}</div>
+      <div className="text-sm leading-5 text-destructive whitespace-pre-wrap">{line.content}</div>
     )
   }
 
   if (line.type === 'system') {
     return (
-      <div className="text-sm leading-5 text-muted-foreground italic">
+      <div className="text-sm leading-5 text-muted-foreground italic whitespace-pre-wrap">
         {line.content}
       </div>
     )
   }
 
-  return <div className="text-sm leading-5">{line.content}</div>
+  return <div className="text-sm leading-5 whitespace-pre-wrap">{line.content}</div>
 }

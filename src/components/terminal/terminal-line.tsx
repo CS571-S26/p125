@@ -23,12 +23,12 @@ export function TerminalLine({ line }: TerminalLineProps) {
 
   if (line.type === 'system') {
     return (
-      <div className="text-sm leading-5 text-muted-foreground italic">
+      <div className="text-sm leading-5 text-muted-foreground italic whitespace-pre-wrap">
         {line.content}
       </div>
     )
   }
 
   // output
-  return <div className="text-sm leading-5">{line.content}</div>
+  return <div className="text-sm leading-5 whitespace-pre-wrap">{line.content}</div>
 }

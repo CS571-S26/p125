@@ -20,19 +20,25 @@ function hydrateLines(lines: Omit<TerminalLine, 'id'>[]): TerminalLine[] {
   return lines.map(l => ({ ...l, id: makeId() }))
 }
 
-const INITIAL_STATE: TerminalState = {
-  lines: [
-    makeLine('system', 'Welcome to vishrut.tech'),
-    makeLine('system', "Type 'help' to see available commands."),
-  ],
-  input: '',
-  history: [],
-  historyIndex: -1,
-  isLoading: false,
+const DEFAULT_INITIAL_LINES: Omit<TerminalLine, 'id'>[] = [
+  { type: 'system', content: 'Welcome to vishrut.tech' },
+  { type: 'system', content: "Type 'help' to see available commands." },
+]
+
+function buildInitialState(
+  initialLines?: Omit<TerminalLine, 'id'>[],
+): TerminalState {
+  return {
+    lines: hydrateLines(initialLines ?? DEFAULT_INITIAL_LINES),
+    input: '',
+    history: [],
+    historyIndex: -1,
+    isLoading: false,
+  }
 }
 
-export function useTerminal() {
-  const [state, setState] = useState<TerminalState>(INITIAL_STATE)
+export function useTerminal(initialLines?: Omit<TerminalLine, 'id'>[]) {
+  const [state, setState] = useState<TerminalState>(() => buildInitialState(initialLines))
   const outputRef = useRef<HTMLDivElement | null>(null)
   // Keep a ref to state so async callbacks always see current state
   const stateRef = useRef(state)
@@ -79,6 +85,30 @@ export function useTerminal() {
         lines: [...prev.lines, ...hydrateLines(result.lines)],
         ...(result.nextState ?? {}),
       }))
+      return
+    }
+
+    // Streaming async: no loading placeholder; handler appends lines as it goes.
+    if (def.stream) {
+      const append = (type: TerminalLine['type'], content: TerminalLine['content']) => {
+        setState(prev => ({ ...prev, lines: [...prev.lines, makeLine(type, content)] }))
+      }
+      setState(prev => ({ ...prev, isLoading: true }))
+      try {
+        const result = (await def.handler(args, currentState, append)) as CommandResult | undefined
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          lines: result?.lines ? [...prev.lines, ...hydrateLines(result.lines)] : prev.lines,
+          ...(result?.nextState ?? {}),
+        }))
+      } catch {
+        setState(prev => ({
+          ...prev,
+          isLoading: false,
+          lines: [...prev.lines, makeLine('error', 'Command failed. Please try again.')],
+        }))
+      }
       return
     }
 

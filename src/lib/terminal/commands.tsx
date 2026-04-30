@@ -19,14 +19,16 @@ import {
 } from './async-commands'
 import {
   handleClear,
+  handleCoffee,
   handleDate,
   handleExit,
-  handleExperience,
+  handleHack,
   handleHello,
-  handleProjects,
+  handleMatrix,
+  handlePing,
   handleRm,
-  handleSkills,
   handleSudo,
+  handleUname,
   handleWhoami,
 } from './static-commands'
 
@@ -43,16 +45,19 @@ export const COMMANDS: Record<string, CommandDef> = {
     ],
     type: 'sync',
     handler: (args): CommandResult => {
+      const flags = new Set(args.filter(a => a.startsWith('--')))
+      const positional = args.filter(a => !a.startsWith('--'))
+
       // help <command> — detail view for a specific command
-      if (args[0]) {
-        const query = args[0].toLowerCase()
+      if (positional[0]) {
+        const query = positional[0].toLowerCase()
         const entry = Object.entries(COMMANDS).find(
           ([name, def]) => name === query || def.aliases?.includes(query),
         )
         if (!entry) {
           return {
             lines: [
-              { type: 'error', content: `help: no such command '${args[0]}'` },
+              { type: 'error', content: `help: no such command '${positional[0]}'` },
             ],
           }
         }
@@ -96,9 +101,10 @@ export const COMMANDS: Record<string, CommandDef> = {
         }
       }
 
-      // help — list all visible commands
+      // help — list visible commands. --all also includes hidden ones.
+      const showAll = flags.has('--all')
       const lines = Object.entries(COMMANDS)
-        .filter(([, def]) => !def.hiddenFromHelp)
+        .filter(([, def]) => showAll || !def.hiddenFromHelp)
         .map(([name, def]) => ({
           type: 'output' as const,
           content: (
@@ -135,27 +141,6 @@ export const COMMANDS: Record<string, CommandDef> = {
     description: 'Print current date and time',
     type: 'sync',
     handler: handleDate,
-    hiddenFromHelp: false,
-  },
-
-  skills: {
-    description: 'List my technical skills',
-    type: 'sync',
-    handler: handleSkills,
-    hiddenFromHelp: false,
-  },
-
-  experience: {
-    description: 'View my work experience',
-    type: 'sync',
-    handler: handleExperience,
-    hiddenFromHelp: false,
-  },
-
-  projects: {
-    description: 'Browse my projects',
-    type: 'sync',
-    handler: handleProjects,
     hiddenFromHelp: false,
   },
 
@@ -247,5 +232,43 @@ export const COMMANDS: Record<string, CommandDef> = {
     type: 'async',
     handler: (args) => handleDefine(args),
     hiddenFromHelp: false,
+  },
+
+  // ── Hidden easter eggs ────────────────────────────────────────────────────
+  matrix: {
+    description: 'Enter the matrix',
+    type: 'async',
+    stream: true,
+    handler: (args, state, append) => handleMatrix(args, state, append),
+    hiddenFromHelp: true,
+  },
+
+  coffee: {
+    description: 'Brew a cup',
+    type: 'sync',
+    handler: handleCoffee,
+    hiddenFromHelp: true,
+  },
+
+  hack: {
+    description: 'Definitely a real hack',
+    type: 'sync',
+    handler: handleHack,
+    hiddenFromHelp: true,
+  },
+
+  uname: {
+    description: 'System info',
+    type: 'sync',
+    handler: handleUname,
+    hiddenFromHelp: true,
+  },
+
+  ping: {
+    description: 'Ping a host',
+    usage: '[host]',
+    type: 'sync',
+    handler: (args) => handlePing(args),
+    hiddenFromHelp: true,
   },
 }

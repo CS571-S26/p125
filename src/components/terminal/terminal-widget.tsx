@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation'
 
 import { COMMANDS } from '@/lib/terminal/commands'
 import { makeGamesCommand } from '@/lib/terminal/game-commands'
-import { makeNavigateCommand } from '@/lib/terminal/navigate-command'
+import { makeNavigateCommand, makeRouteCommand } from '@/lib/terminal/navigate-command'
 import { useTerminal } from '@/hooks/use-terminal'
 import type { TerminalLine } from '@/types/terminal'
 import { Card } from '@/components/ui/card'
@@ -44,6 +44,9 @@ export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
   useEffect(() => {
     COMMANDS['games'] = makeGamesCommand(launchGame)
     COMMANDS['navigate'] = makeNavigateCommand(router)
+    COMMANDS['experience'] = makeRouteCommand(router, '/experience', 'View my work experience')
+    COMMANDS['projects'] = makeRouteCommand(router, '/projects', 'Browse my projects')
+    COMMANDS['blog'] = makeRouteCommand(router, '/blog', 'Read the blog')
   }, [launchGame, router])
 
   useEffect(() => {

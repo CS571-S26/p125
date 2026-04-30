@@ -17,6 +17,6 @@ export function TerminalTitleBar() {
   }
 
   return (
-    <TitleBar title="bash — visitor@vishrut.tech" />
+    <TitleBar title="vish — visitor@vishrut.tech" />
   )
 }

@@ -3,10 +3,13 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '@/contexts/game-context'
 import { AnimatePresence, motion, Transition } from 'motion/react'
+import { useRouter } from 'next/navigation'
 
 import { COMMANDS } from '@/lib/terminal/commands'
 import { makeGamesCommand } from '@/lib/terminal/game-commands'
+import { makeNavigateCommand } from '@/lib/terminal/navigate-command'
 import { useTerminal } from '@/hooks/use-terminal'
+import type { TerminalLine } from '@/types/terminal'
 import { Card } from '@/components/ui/card'
 import { GamePanel } from '@/components/games/game-panel'
 
@@ -19,7 +22,11 @@ const SPRING = {
   damping: 45,
 } as const satisfies Transition
 
-export function TerminalWidget() {
+interface TerminalWidgetProps {
+  initialLines?: Omit<TerminalLine, 'id'>[]
+}
+
+export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
   const {
     lines,
     input,
@@ -28,14 +35,16 @@ export function TerminalWidget() {
     handleKeyDown,
     outputRef,
     appendLine,
-  } = useTerminal()
+  } = useTerminal(initialLines)
   const { activeGame, lastScore, launchGame } = useGame()
+  const router = useRouter()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [isFocused, setIsFocused] = useState(false)
 
   useEffect(() => {
     COMMANDS['games'] = makeGamesCommand(launchGame)
-  }, [launchGame])
+    COMMANDS['navigate'] = makeNavigateCommand(router)
+  }, [launchGame, router])
 
   useEffect(() => {
     if (lastScore) {

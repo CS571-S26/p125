@@ -31,7 +31,7 @@ export function SiteFooter() {
           >
             <LinkedIn className="h-4 w-4" />
           </Link>
-          <ThemeToggle />
+          {/* <ThemeToggle /> */}
         </div>
       </div>
     </footer>

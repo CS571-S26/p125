@@ -60,6 +60,7 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="dark"
           disableTransitionOnChange
+          forcedTheme='dark'
         >
           <TooltipProvider>
             <SiteHeader />

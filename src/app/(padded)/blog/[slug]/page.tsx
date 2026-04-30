@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation'
 import { getAllContent, getContentBySlug } from '@/lib/mdx'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { PageHeaderSetter } from '@/components/layout/page-header-setter'
 import { ReadingProgress } from '@/components/detail/reading-progress'
+import { PageHeaderSetter } from '@/components/layout/page-header-setter'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -16,10 +16,15 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = getContentBySlug('blog', slug)
-  return {
-    title: post.title,
-    description: post.description,
+  try {
+    const post = getContentBySlug('blog', slug)
+    return {
+      title: post.title,
+      description: post.description,
+    }
+  } catch {
+    // Missing/invalid slug: let the page render determine 404.
+    return {}
   }
 }
 
@@ -65,13 +70,19 @@ export default async function BlogPostPage({ params }: Props) {
         </div>
 
         {post.description && (
-          <p className="text-muted-foreground leading-relaxed mb-4">{post.description}</p>
+          <p className="text-muted-foreground leading-relaxed mb-4">
+            {post.description}
+          </p>
         )}
 
         {post.tags && post.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-6">
             {post.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="text-[10px] py-0 px-1.5 font-normal">
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="text-[10px] py-0 px-1.5 font-normal"
+              >
                 {tag}
               </Badge>
             ))}

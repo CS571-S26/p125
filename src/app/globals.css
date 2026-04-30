@@ -172,3 +172,35 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+/* ── rehype-pretty-code line styling ─────────────────────────────────────── */
+pre [data-line] {
+  display: inline-block;
+  width: 100%;
+  padding: 0 1rem;
+  border-left: 2px solid transparent;
+}
+
+pre [data-highlighted-line] {
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+  border-left-color: var(--primary);
+}
+
+pre [data-highlighted-chars] {
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.25rem;
+}
+
+pre code[data-line-numbers] {
+  counter-reset: line;
+}
+
+pre code[data-line-numbers] > [data-line]::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 1.5rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: var(--muted-foreground);
+}

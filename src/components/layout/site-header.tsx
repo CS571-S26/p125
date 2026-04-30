@@ -9,7 +9,10 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 4)
+    const onScroll = () => {
+      const y = window.scrollY
+      setScrolled((prev) => (prev ? y > 24 : y > 64))
+    }
     onScroll()
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)

@@ -1,15 +1,19 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { useGame } from '@/contexts/game-context'
 import { AnimatePresence, motion, Transition } from 'motion/react'
-import { useRouter } from 'next/navigation'
 
+import type { GameId } from '@/types/games'
+import type { TerminalLine } from '@/types/terminal'
 import { COMMANDS } from '@/lib/terminal/commands'
 import { makeGamesCommand } from '@/lib/terminal/game-commands'
-import { makeNavigateCommand, makeRouteCommand } from '@/lib/terminal/navigate-command'
+import {
+  makeNavigateCommand,
+  makeRouteCommand,
+} from '@/lib/terminal/navigate-command'
 import { useTerminal } from '@/hooks/use-terminal'
-import type { TerminalLine } from '@/types/terminal'
 import { Card } from '@/components/ui/card'
 import { GamePanel } from '@/components/games/game-panel'
 
@@ -44,9 +48,18 @@ export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
   useEffect(() => {
     COMMANDS['games'] = makeGamesCommand(launchGame)
     COMMANDS['navigate'] = makeNavigateCommand(router)
-    COMMANDS['experience'] = makeRouteCommand(router, '/experience', 'View my work experience')
-    COMMANDS['projects'] = makeRouteCommand(router, '/projects', 'Browse my projects')
+    COMMANDS['experience'] = makeRouteCommand(
+      router,
+      '/experience',
+      'View my work experience',
+    )
+    COMMANDS['projects'] = makeRouteCommand(
+      router,
+      '/projects',
+      'Browse my projects',
+    )
     COMMANDS['blog'] = makeRouteCommand(router, '/blog', 'Read the blog')
+    COMMANDS['home'] = makeRouteCommand(router, '/', 'Go to home')
   }, [launchGame, router])
 
   useEffect(() => {
@@ -61,6 +74,24 @@ export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
   useEffect(() => {
     if (!activeGame) inputRef.current?.focus()
   }, [lines, activeGame])
+
+  useEffect(() => {
+    function onFocusEvent() {
+      inputRef.current?.focus()
+    }
+    window.addEventListener('terminal:focus', onFocusEvent)
+    return () => window.removeEventListener('terminal:focus', onFocusEvent)
+  }, [])
+
+  useEffect(() => {
+    const pending = sessionStorage.getItem('pendingGame')
+    if (!pending) return
+    sessionStorage.removeItem('pendingGame')
+    const valid: GameId[] = ['snake', 'space-invaders']
+    if (valid.includes(pending as GameId)) {
+      launchGame(pending as GameId)
+    }
+  }, [launchGame])
 
   return (
     <>

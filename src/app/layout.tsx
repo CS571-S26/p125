@@ -15,6 +15,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { SiteFooter } from '@/components/layout/site-footer'
 import { SiteHeader } from '@/components/layout/site-header'
 import { ThemeProvider } from '@/components/layout/theme-provider'
+import { GlobalTerminalLauncher } from '@/components/terminal/global-terminal-launcher'
 
 const nunitoSans = Nunito_Sans({ variable: '--font-sans', subsets: ['latin'] })
 
@@ -79,6 +80,7 @@ export default function RootLayout({
               <div className="px-2">{children}</div>
             </main>
             <SiteFooter />
+            <GlobalTerminalLauncher />
           </TooltipProvider>
         </ThemeProvider>
       </body>

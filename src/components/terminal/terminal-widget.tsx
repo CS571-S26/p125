@@ -35,11 +35,13 @@ export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
     lines,
     input,
     isLoading,
+    history,
     handleInputChange,
     handleKeyDown,
     outputRef,
     appendLine,
   } = useTerminal(initialLines)
+  const showHint = !input && !isLoading && history.length === 0
   const { activeGame, lastScore, launchGame } = useGame()
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement | null>(null)
@@ -114,6 +116,7 @@ export function TerminalWidget({ initialLines }: TerminalWidgetProps = {}) {
               input={input}
               isLoading={isLoading}
               isFocused={isFocused}
+              showHint={showHint}
               outputRef={outputRef}
             />
           </Card>

@@ -1,16 +1,20 @@
 import { cn } from '@/lib/utils'
 import { TERMINAL_PROMPT } from '@/constants/terminal'
 
+import { TerminalGhostHint } from './terminal-ghost-hint'
+
 interface TerminalCurrentLineProps {
   input: string
   isLoading: boolean
   isFocused: boolean
+  showHint: boolean
 }
 
 export function TerminalCurrentLine({
   input,
   isLoading,
   isFocused,
+  showHint,
 }: TerminalCurrentLineProps) {
   return (
     <div className="text-sm leading-5 flex items-center">
@@ -18,6 +22,7 @@ export function TerminalCurrentLine({
         {TERMINAL_PROMPT}&nbsp;
       </span>
       <span>{input}</span>
+      {showHint && input === '' && <TerminalGhostHint />}
       {!isLoading && (
         <span
           className={cn(

@@ -10,6 +10,7 @@ interface TerminalStreamProps {
   input: string
   isLoading: boolean
   isFocused: boolean
+  showHint: boolean
   outputRef: RefObject<HTMLDivElement | null>
 }
 
@@ -18,6 +19,7 @@ export function TerminalStream({
   input,
   isLoading,
   isFocused,
+  showHint,
   outputRef,
 }: TerminalStreamProps) {
   return (
@@ -28,7 +30,12 @@ export function TerminalStream({
       {lines.map((line) => (
         <TerminalLineComponent key={line.id} line={line} />
       ))}
-      <TerminalCurrentLine input={input} isLoading={isLoading} isFocused={isFocused} />
+      <TerminalCurrentLine
+        input={input}
+        isLoading={isLoading}
+        isFocused={isFocused}
+        showHint={showHint}
+      />
     </div>
   )
 }

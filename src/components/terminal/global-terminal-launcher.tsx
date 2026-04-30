@@ -74,7 +74,12 @@ function FloatingTerminal({ onClose }: { onClose: () => void }) {
           </div>
         )}
         <div className="font-(family-name:--font-jetbrains-mono) px-4 py-3">
-          <TerminalCurrentLine input={input} isLoading={isLoading} isFocused={isFocused} />
+          <TerminalCurrentLine
+            input={input}
+            isLoading={isLoading}
+            isFocused={isFocused}
+            showHint={false}
+          />
         </div>
         <input
           ref={inputRef}

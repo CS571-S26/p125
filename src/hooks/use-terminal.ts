@@ -234,6 +234,7 @@ export function useTerminal(initialLines?: Omit<TerminalLine, 'id'>[]) {
     lines: state.lines,
     input: state.input,
     isLoading: state.isLoading,
+    history: state.history,
     handleInputChange,
     handleKeyDown,
     outputRef,
